@@ -2,8 +2,8 @@
 title:  "Effective JavaScript"
 subtitle: "提升功力的心法秘籍"
 author: "wu"
-avatar: "img/authors/timg10.jpg"
-image: "img/timg10.jpg"
+avatar: "img/authors/tigerCat.jpg"
+image: "img/tigerCat.jpg"
 date:   2018-10-07 15:00:00
 ---
 
@@ -83,7 +83,7 @@ Effective JavaScript
 
 ✦ Whenever you are using a library that works with strings, consult the documentation to see how it handles the full range of code points.
 
-## Variable Scope
+## 2 - Variable Scope
 
 ### Item 8: Minimize Use of the Global Object
 
@@ -165,7 +165,7 @@ Effective JavaScript
 
 ✦ Prefer indirect eval to direct eval whenever possible.
 
-## Working with Functions
+## 3 - Working with Functions
 
 ### Item 18: Understand the Difference between Function, Method, and Constructor Calls
 
@@ -251,93 +251,307 @@ Effective JavaScript
 
 ✦ Avoid the nonstandard caller property of functions, because it does not reliably contain complete information about the stack.
 
-## Objects and Prototypes
+## 4 - Objects and Prototypes
 
 ### Item 30: Understand the Difference between prototype, getPrototypeOf, and__proto__
 
+✦ C.prototype determines the prototype of objects created by new C().
+
+✦ Object.getPrototypeOf(obj) is the standard ES5 function for retrieving the prototype of an object.
+
+✦ obj.__proto__ is a nonstandard mechanism for retrieving the proto- type of an object.
+
+✦ A class is a design pattern consisting of a constructor function and an associated prototype.
+
 ### Item 31: Prefer Object.getPrototypeOf to __proto__
+
+✦ Prefer the standards-compliant Object.getPrototypeOf to the non- standard __proto__ property.
+
+✦ Implement Object.getPrototypeOf in non-ES5 environments that support __proto__.
 
 ### Item 32: Never Modify __proto__
 
+✦ Never modify an object’s __proto__ property.
+
+✦ Use Object.create to provide a custom prototype for new objects.
+
 ### Item 33: Make Your Constructors new-Agnostic
+
+✦ Make a constructor agnostic to its caller’s syntax by reinvoking itself with new or with Object.create.
+
+✦ Document clearly when a function expects to be called with new.
 
 ### Item 34: Store Methods on Prototypes
 
+✦ Storing methods on instance objects creates multiple copies of the functions, one per instance object.
+
+✦ Prefer storing methods on prototypes over storing them on instance objects.
+
 ### Item 35: Use Closures to Store Private Data
+
+✦ Closure variables are private, accessible only to local references.
+
+✦ Use local variables as private data to enforce information hiding within methods.
 
 ### Item 36: Store Instance State Only on Instance Objects
 
+✦ Mutable data can be problematic when shared, and prototypes are shared between all their instances.
+
+✦ Store mutable per-instance state on instance objects.
+
 ### Item 37: Recognize the Implicit Binding of this
+
+✦ The scope of this is always determined by its nearest enclosing function.
+
+✦ Use a local variable, usually called self, me, or that, to make a this-binding available to inner functions.
 
 ### Item 38: Call Superclass Constructors from Subclass Constructors
 
+✦ Call the superclass constructor explicitly from subclass construc- tors, passing this as the explicit receiver.
+
+✦ Use Object.create to construct the subclass prototype object to avoid calling the superclass constructor.
+
 ### Item 39: Never Reuse Superclass Property Names
+
+✦ Be aware of all property names used by your superclasses.
+
+✦ Never reuse a superclass property name in a subclass.
 
 ### Item 40: Avoid Inheriting from Standard Classes
 
+✦ Inheriting from standard classes tends to break due to special internal properties such as [[Class]].
+
+✦ Prefer delegating to properties instead of inheriting from standard classes.
+
 ### Item 41: Treat Prototypes As an Implementation Detail
+
+✦ Objects are interfaces; prototypes are implementations.
+
+✦ Avoid inspecting the prototype structure of objects you don’t control.
+
+✦ Avoid inspecting properties that implement the internals of objects you don’t control.
 
 ### Item 42: Avoid Reckless Monkey-Patching
 
-## Arrays and Dictionaries
+✦ Avoid reckless monkey-patching.
+
+✦ Document any monkey-patching performed by a library.
+
+✦ Consider making monkey-patching optional by performing the mod- ifications in an exported function.
+
+✦ Use monkey-patching to provide polyfills for missing standard APIs.
+
+## 5 - Arrays and Dictionaries
 
 ### Item 43: Build Lightweight Dictionaries from Direct Instances of Object
 
+✦ Use object literals to construct lightweight dictionaries.
+
+✦ Lightweight dictionaries should be direct descendants of Object.prototype to protect against prototype pollution in for...in loops.
+
 ### Item 44: Use null Prototypes to Prevent Prototype Pollution
+
+✦ In ES5, use Object.create(null) to create prototype-free empty objects that are less susceptible to pollution.
+
+✦ In older environments, consider using { __proto__: null }.
+
+✦ But beware that __proto__ is neither standard nor entirely portable and may be removed in future JavaScript environments.
+
+✦ Never use the name "__proto__" as a dictionary key since some environments treat this property specially.
 
 ### Item 45: Use hasOwnProperty to Protect Against Prototype Pollution
 
+✦ Use hasOwnProperty to protect against prototype pollution.
+
+✦ Use lexical scope and call to protect against overriding of the hasOwnProperty method.
+
+✦ Consider implementing dictionary operations in a class that encapsulates the boilerplate hasOwnProperty tests.
+
+✦ Use a dictionary class to protect against the use of "__proto__" as a key.
+
 ### Item 46: Prefer Arrays to Dictionaries for Ordered Collections
+
+✦ Avoid relying on the order in which for...in loops enumerate object properties.
+
+✦ If you aggregate data in a dictionary, make sure the aggregate oper- ations are order-insensitive.
+
+✦ Use arrays instead of dictionary objects for ordered collections.
 
 ### Item 47: Never Add Enumerable Properties to Object.prototype
 
+✦ Avoid adding properties to Object.prototype.
+
+✦ Consider writing a function instead of an Object.prototype method.
+
+✦ If you do add properties to Object.prototype, use ES5’s Object.defineProperty to define them as nonenumerable properties.
+
 ### Item 48: Avoid Modifying an Object during Enumeration
+
+✦ Make sure not to modify an object while enumerating its properties with a for...in loop.
+
+✦ Use a while loop or classic for loop instead of a for...in loop when iterating over an object whose contents might change during the loop.
+
+✦ For predictable enumeration over a changing data structure, con- sider using a sequential data structure such as an array instead of a dictionary object.
 
 ### Item 49: Prefer for Loops to for...in Loops for Array Iteration
 
+■ Always use a for loop rather than a for...in loop for iterating over the indexed properties of an array.
+
+■ Consider storing the length property of an array in a local vari- able before a loop to avoid recomputing the property lookup.
+
 ### Item 50: Prefer Iteration Methods to Loops
+
+✦ Use iteration methods such as Array.prototype.map in place of for loops to make code more read- able and avoid duplicating loop control logic.
+
+✦ Use custom iteration functions to abstract common loop patterns that are not provided by the standard library.
+
+✦ Traditional loops can still be appropriate in cases where early exit is necessary; alternatively, the some and every methods can be used for early exit.
 
 ### Item 51: Reuse Generic Array Methods on Array-Like Objects
 
+✦ Reuse generic Array methods on array-like objects by extracting method objects and using their call method.
+
+✦ Any object can be used with generic Array methods if it has indexed properties and an appropriate length property.
+
 ### Item 52: Prefer Array Literals to the Array Constructor
 
-## Library and API Design
+✦ The Array constructor behaves differently if its first argument is a number.
+
+✦ Use array literals instead of the Array constructor.
+
+## 6 - Library and API Design
 
 ### Item 53: Maintain Consistent Conventions
 
+✦ Use consistent conventions for variable names and function signatures.
+
+✦ Don’t deviate from conventions your users are likely to encounter in other parts of their development platform.
+
 ### Item 54: Treat undefined As “No Value”
+
+✦ Avoid using undefined to represent anything other than the absence of a specific value.
+
+✦ Use descriptive string values or objects with named boolean proper- ties, rather than undefined or null, to represent application-specific flags.
+
+✦ Test for undefined instead of checking arguments.length to provide parameter default values.
+
+✦ Never use truthiness tests for parameter default values that should allow 0, NaN, or the empty string as valid arguments.
 
 ### Item 55: Accept Options Objects for Keyword Arguments
 
+✦ Use options objects to make APIs more readable and memorable.
+
+✦ The arguments provided by an options object should all be treated as optional.
+
+✦ Use an extend utility function to abstract out the logic of extracting values from options objects.
+
 ### Item 56: Avoid Unnecessary State
+
+✦ Prefer stateless APIs where possible.
+
+✦ When providing stateful APIs, document the relevant state that each operation depends on.
 
 ### Item 57: Use Structural Typing for Flexible Interfaces
 
+✦ Use structural typing (also known as duck typing) for flexible object interfaces.
+
+✦ Avoid inheritance when structural interfaces are more flexible and lightweight.
+
+✦ Use mock objects, that is, alternative implementations of interfaces that provide repeatable behavior, for unit testing.
+
 ### Item 58: Distinguish between Array and Array-Like
+
+✦ Never overload structural types with other overlapping types.
+
+✦ When overloading a structural type with other types, test for the other types first.
+
+✦ Accept true arrays instead of array-like objects when overloading with other object types.
+
+✦ Document whether your API accepts true arrays or array-like values.
+
+✦ Use ES5’s Array.isArray to test for true arrays.
 
 ### Item 59: Avoid Excessive Coercion
 
+✦ Avoid mixing coercions with overloading.
+
+✦ Consider defensively guarding against unexpected inputs.
+
 ### Item 60: Support Method Chaining
 
-## Concurrency
+✦ Use method chaining to combine stateless operations.
+
+✦ Support method chaining by designing stateless methods that produce new objects.
+
+✦ Support method chaining in stateful methods by returning this.
+
+## 7 - Concurrency
 
 ### Item 61: Don’t Block the Event Queue on I/O
 
+✦ Asynchronous APIs take callbacks to defer processing of expensive operations and avoid blocking the main application.
+
+✦ JavaScript accepts events concurrently but processes event handlers sequentially using an event queue.
+
+✦ Never use blocking I/O in an application’s event queue.
+
 ### Item 62: Use Nested or Named Callbacks for Asynchronous Sequencing
+
+✦ Use nested or named callbacks to perform several asynchronous operations in sequence.
+
+✦ Try to strike a balance between excessive nesting of callbacks and awkward naming of non-nested callbacks.
+
+✦ Avoid sequencing operations that can be performed concurrently.
 
 ### Item 63: Be Aware of Dropped Errors
 
+✦ Avoid copying and pasting error-handling code by writing shared error-handling functions.
+
+✦ Make sure to handle all error conditions explicitly to avoid dropped errors.
+
 ### Item 64: Use Recursion for Asynchronous Loops
+
+✦ Loops cannot be asynchronous.
+
+✦ Use recursive functions to perform iterations in separate turns of the event loop.
+
+✦ Recursion performed in separate turns of the event loop does not overflow the call stack.
 
 ### Item 65: Don’t Block the Event Queue on Computation
 
+✦ Avoid expensive algorithms in the main event queue.
+
+✦ On platforms that support it, the Worker API can be used for running long computations in a separate event queue.
+
+✦ When the Worker API is not available or is too costly, consider break- ing up computations across multiple turns of the event loop.
+
 ### Item 66: Use a Counter to Perform Concurrent Operations
+
+✦ Events in a JavaScript application occur nondeterministically, that is, in unpredictable order.
+
+✦ Use a counter to avoid data races in concurrent operations.
 
 ### Item 67: Never Call Asynchronous Callbacks Synchronously
 
+✦ Never call an asynchronous callback synchronously, even if the data is immediately available.
+
+✦ Calling an asynchronous callback synchronously disrupts the expected sequence of operations and can lead to unexpected inter-leaving of code.
+
+✦ Calling an asynchronous callback synchronously can lead to stack overflows or mishandled exceptions.
+
+✦ Use an asynchronous API such as setTimeout to schedule an asyn- chronous callback to run in another turn.
+
 ### Item 68: Use Promises for Cleaner Asynchronous Logic
 
---------------- 华丽的配图分界线 ---------------
+✦ Promises represent eventual values, that is, concurrent computations that eventually produce a result.
+
+✦ Use promises to compose different concurrent operations.
+
+✦ Use promise APIs to avoid data races.
+
+✦ Use select (also known as choose) for situations where an inten- tional race condition is required.
+
+--------------- 低调的配图分界线 ---------------
 
 ✦ Effective JavaScript - Loi Wu -
 
