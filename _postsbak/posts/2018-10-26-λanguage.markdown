@@ -1,0 +1,77 @@
+---
+title:  "λanguage"
+subtitle: "How to implement a programming language in JavaScript"
+author: "wu"
+avatar: "img/authors/tigerCat.jpg"
+image: "img/f.jpg"
+date:   2018-10-26 03:00:00
+---
+
+How to implement a programming language in JavaScript
+
+## Introduction
+
+## λanguage description
+
+## Writing a parser
+
+### Input stream
+
+### Token stream
+
+### The AST
+
+### The parser
+
+## Simple interpreter
+
+### Test what we have
+
+### Adding new constructs
+
+### How fast are we?
+
+## CPS Evaluator
+
+### Guarding the stack
+
+### Continuations
+
+#### Yield (advanced)
+
+## Compiling to JS
+
+### JS code generator
+
+### CPS transformer
+
+#### Samples
+
+#### Improvements
+
+### Optimizer
+
+## Wrapping up
+
+## Real samples
+
+### Primitives
+
+### catDir
+
+### copyTree sequential
+
+### copyTree parallel
+
+### In fairness to Node
+
+### Error handling
+
+----- ----- boundary ----- -----
+
+> How to implement a programming language in JavaScript - Loi Wu -
+
+<div class="scale"><img src="img/hugkiss.jpg"  alt="λanguage" /></div>
+
+
+
