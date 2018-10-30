@@ -1,0 +1,231 @@
+<p>How to implement a programming language in JavaScript 如何用JavaScript实现一门编程语言</p>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>· Write a parser 编写词法分析器</p>
+
+<p>· Write an interpreter 编写解释器</p>
+
+<p>· <a href="https://en.wikipedia.org/wiki/Continuation">Continuations 延续</a></p>
+
+<p>· Write a compiler 编写编译器</p>
+
+<p>· Transform code to continuation-passing style 将代码转换成“连续传递的风格”</p>
+
+<p>· Optimization techniques 优化技术</p>
+
+<p>· Examples of what λanguage brings new over plain JavaScript λanguage基于JavaScript之上的新特性示例</p>
+
+<h2 id="λanguage-description">λanguage description</h2>
+
+<p>Before anything, we should have a clear picture about what we’re trying to achieve. 开工之前，我们先要对即将实现的目标有一个清晰的认识。It’s a good idea to put together a rigorous description of the grammar. 接下来，我们把语法严格的描述出来，举个例子：</p>
+
+<pre>
+# this is a comment
+println("Hello λanguage!");
+println(2 + 3 * 4);
+# functions are introduced with `lambda` or `λ`
+fib = lambda (n) if n &lt; 2 then n else fib(n - 1) + fib(n - 2);
+println(fib(15));
+print-range = λ(a, b)             # `λ` is synonym to `lambda`
+                if a &lt;= b then {  # `then` here is optional as you can see below
+                  print(a);
+                  if a + 1 &lt;= b {
+                    print(", ");
+                    print-range(a + 1, b);
+                  } else println("");        # newline
+                };
+print-range(1, 5);
+</pre>
+
+<p>The output is 输出:</p>
+
+<pre>
+Hello World!
+14
+610
+1, 2, 3, 4, 5
+</pre>
+
+<p>evaluates an expression 计算表达式:</p>
+
+<pre>
+a = {
+  fib(10);  # has no side-effects, but it's computed anyway
+  fib(15)   # the last semicolon can be missing
+};
+print(a); # prints 610
+</pre>
+
+<p>ternary operator 三目运算符:</p>
+
+<pre>
+a = foo() ? bar() : baz();           // JavaScript
+a = if foo() then bar() else baz();  # λanguage
+</pre>
+
+<p>if expression if表达式:</p>
+
+<pre>
+if foo() then print("It will print "OK" if and only if the result of foo() is NOT false.");
+</pre>
+
+<h2 id="writing-a-parser">Writing a parser</h2>
+
+<p>For example, for the following program text 举个例子，对于以下的程序文本:</p>
+
+<pre>
+sum = lambda(a, b) {
+  a + b;
+};
+print(sum(1, 2));
+</pre>
+
+<p>The parser will generate the following AST, as a JavaScript object 词法分析器会产生如下的抽象语法树，形如一个JavaScript对象:</p>
+
+<pre>
+{
+  type: "prog",
+  prog: [
+    // first line:
+    {
+      type: "assign",
+      operator: "=",
+      left: { type: "var", value: "sum" },
+      right: {
+        type: "lambda",
+        vars: [ "a", "b" ],
+        body: {
+          // the body should be a "prog", but because
+          // it contains a single expression, our parser
+          // reduces it to the expression itself.
+          type: "binary",
+          operator: "+",
+          left: { type: "var", value: "a" },
+          right: { type: "var", value: "b" }
+        }
+      }
+    },
+    // second line:
+    {
+      type: "call",
+      func: { type: "var", value: "print" },
+      args: [{
+        type: "call",
+        func: { type: "var", value: "sum" },
+        args: [ { type: "num", value: 1 },
+                { type: "num", value: 2 } ]
+      }]
+    }
+  ]
+}
+</pre>
+
+<p>The main difficulty in writing a parser consists in a failure to properly organize the code. The parser should operate at a higher level than reading characters from a string. A few advices on how to keep complexity manageable:</p>
+
+<p>· Write many functions and keep them small. In every function, do one thing and do it well. 多写函数并尽量保持单个函数的小，在每个函数中，一次做好一件事。</p>
+
+<p>· Do not try to use regexps for parsing. They don’t work. Regexps can be helpful in the lexer though, but I suggest to limit them to very simple things. 不要在词法分析时使用正则表达式，此时正则不管用。 虽然正则有助于词法的分析，但建议在处理简单的事情时，克制对正则的使用。</p>
+
+<p>· Don’t attempt to guess. When unsure how to parse something, throw an error and make sure the message contains the error location (line/column). 绝对不要胡乱瞎猜。如果词法分析时遇到了不确定的情况，可以抛出异常，并确保错误信息里包含了异常发生的代码行/列。</p>
+
+<h3 id="input-stream---the-character-input-stream-字符输入流">Input stream - The character input stream 字符输入流</h3>
+
+<p>This is the smallest part. We’re going to create a “stream object” which provides operations to read characters from a string. 首先编写“流对象”，提供一组操作，从字符串里读取字符。</p>
+
+<p>A stream object has 4 methods 流对象包含4种方法:</p>
+
+<p>· peek() — returns the next value but without removing it from the stream. 
+返回下一个值。但不在流中将其去除。</p>
+
+<p>· next() — returns the next value and also discards it from the stream.
+返回下一个值。同时在流中将其去除。</p>
+
+<p>· eof() — returns true if and only if there are no more values in the stream.
+返回真，当且仅当流中没有更多值。</p>
+
+<p>· croak(msg) — does throw new Error(msg). 
+抛出异常new Error(msg)。</p>
+
+<p>The full code of “InputStream” object:</p>
+
+<pre>
+function InputStream(input) {
+    var pos = 0, line = 1, col = 0;
+    return {
+        next  : next,
+        peek  : peek,
+        eof   : eof,
+        croak : croak,
+    };
+    function next() {
+        var ch = input.charAt(pos++);
+        if (ch == "\n") line++, col = 0; else col++;
+        return ch;
+    }
+    function peek() {
+        return input.charAt(pos);
+    }
+    function eof() {
+        return peek() == "";
+    }
+    function croak(msg) {
+        throw new Error(msg + " (" + line + ":" + col + ")");
+    }
+}
+</pre>
+
+<h3 id="token-stream---the-token-input-stream-分词输入流">Token stream - The token input stream 分词输入流</h3>
+
+<h3 id="the-ast">The AST</h3>
+
+<h3 id="the-parser">The parser</h3>
+
+<h2 id="simple-interpreter">Simple interpreter</h2>
+
+<h3 id="test-what-we-have">Test what we have</h3>
+
+<h3 id="adding-new-constructs">Adding new constructs</h3>
+
+<h3 id="how-fast-are-we">How fast are we?</h3>
+
+<h2 id="cps-evaluator">CPS Evaluator</h2>
+
+<h3 id="guarding-the-stack">Guarding the stack</h3>
+
+<h3 id="continuations">Continuations</h3>
+
+<h4 id="yield-advanced">Yield (advanced)</h4>
+
+<h2 id="compiling-to-js">Compiling to JS</h2>
+
+<h3 id="js-code-generator">JS code generator</h3>
+
+<h3 id="cps-transformer">CPS transformer</h3>
+
+<h4 id="samples">Samples</h4>
+
+<h4 id="improvements">Improvements</h4>
+
+<h3 id="optimizer">Optimizer</h3>
+
+<h2 id="wrapping-up">Wrapping up</h2>
+
+<h2 id="real-samples">Real samples</h2>
+
+<h3 id="primitives">Primitives</h3>
+
+<h3 id="catdir">catDir</h3>
+
+<h3 id="copytree-sequential">copyTree sequential</h3>
+
+<h3 id="copytree-parallel">copyTree parallel</h3>
+
+<h3 id="in-fairness-to-node">In fairness to Node</h3>
+
+<h3 id="error-handling">Error handling</h3>
+
+<p>· How to implement a programming language in JavaScript - Loi Wu -</p>
+
+<div class="scale"><img src="img/hugkiss.jpg" alt="λanguage" /></div>
+

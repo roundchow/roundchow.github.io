@@ -1,0 +1,829 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>圆周博客</title>
+        <description>在世界中心呼唤爱</description>
+        <link>http://localhost:4000/</link>
+        <atom:link href="http://localhost:4000/feed.xml" rel="self"
+        type="application/rss+xml"/>
+        <pubDate>Tue, 30 Oct 2018 14:57:57 +0800</pubDate>
+        <lastBuildDate>Tue, 30 Oct 2018 14:57:57 +0800</lastBuildDate>
+        <generator>Jekyll v3.8.4</generator>
+        
+        <item>
+            <title>λanguage - 如何实现一门编程语言</title>
+            <description>&lt;p&gt;How to implement a programming language in JavaScript 如何用JavaScript实现一门编程语言&lt;/p&gt;
+
+&lt;h2 id=&quot;introduction&quot;&gt;Introduction&lt;/h2&gt;
+
+&lt;p&gt;· Write a parser 编写词法分析器&lt;/p&gt;
+
+&lt;p&gt;· Write an interpreter 编写解释器&lt;/p&gt;
+
+&lt;p&gt;· &lt;a href=&quot;https://en.wikipedia.org/wiki/Continuation&quot;&gt;Continuations 延续&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;· Write a compiler 编写编译器&lt;/p&gt;
+
+&lt;p&gt;· Transform code to continuation-passing style 将代码转换成“连续传递的风格”&lt;/p&gt;
+
+&lt;p&gt;· Optimization techniques 优化技术&lt;/p&gt;
+
+&lt;p&gt;· Examples of what λanguage brings new over plain JavaScript λanguage基于JavaScript之上的新特性示例&lt;/p&gt;
+
+&lt;h2 id=&quot;λanguage-description&quot;&gt;λanguage description&lt;/h2&gt;
+
+&lt;p&gt;Before anything, we should have a clear picture about what we’re trying to achieve. 开工之前，我们先要对即将实现的目标有一个清晰的认识。It’s a good idea to put together a rigorous description of the grammar. 接下来，我们把语法严格的描述出来，举个例子：&lt;/p&gt;
+
+&lt;pre&gt;
+# this is a comment
+println(&quot;Hello λanguage!&quot;);
+println(2 + 3 * 4);
+# functions are introduced with `lambda` or `λ`
+fib = lambda (n) if n &amp;lt; 2 then n else fib(n - 1) + fib(n - 2);
+println(fib(15));
+print-range = λ(a, b)             # `λ` is synonym to `lambda`
+                if a &amp;lt;= b then {  # `then` here is optional as you can see below
+                  print(a);
+                  if a + 1 &amp;lt;= b {
+                    print(&quot;, &quot;);
+                    print-range(a + 1, b);
+                  } else println(&quot;&quot;);        # newline
+                };
+print-range(1, 5);
+&lt;/pre&gt;
+
+&lt;p&gt;The output is 输出:&lt;/p&gt;
+
+&lt;pre&gt;
+Hello World!
+14
+610
+1, 2, 3, 4, 5
+&lt;/pre&gt;
+
+&lt;p&gt;evaluates an expression 计算表达式:&lt;/p&gt;
+
+&lt;pre&gt;
+a = {
+  fib(10);  # has no side-effects, but it's computed anyway
+  fib(15)   # the last semicolon can be missing
+};
+print(a); # prints 610
+&lt;/pre&gt;
+
+&lt;p&gt;ternary operator 三目运算符:&lt;/p&gt;
+
+&lt;pre&gt;
+a = foo() ? bar() : baz();           // JavaScript
+a = if foo() then bar() else baz();  # λanguage
+&lt;/pre&gt;
+
+&lt;p&gt;if expression if表达式:&lt;/p&gt;
+
+&lt;pre&gt;
+if foo() then print(&quot;It will print &quot;OK&quot; if and only if the result of foo() is NOT false.&quot;);
+&lt;/pre&gt;
+
+&lt;h2 id=&quot;writing-a-parser&quot;&gt;Writing a parser&lt;/h2&gt;
+
+&lt;p&gt;For example, for the following program text 举个例子，对于以下的程序文本:&lt;/p&gt;
+
+&lt;pre&gt;
+sum = lambda(a, b) {
+  a + b;
+};
+print(sum(1, 2));
+&lt;/pre&gt;
+
+&lt;p&gt;The parser will generate the following AST, as a JavaScript object 词法分析器会产生如下的抽象语法树，形如一个JavaScript对象:&lt;/p&gt;
+
+&lt;pre&gt;
+{
+  type: &quot;prog&quot;,
+  prog: [
+    // first line:
+    {
+      type: &quot;assign&quot;,
+      operator: &quot;=&quot;,
+      left: { type: &quot;var&quot;, value: &quot;sum&quot; },
+      right: {
+        type: &quot;lambda&quot;,
+        vars: [ &quot;a&quot;, &quot;b&quot; ],
+        body: {
+          // the body should be a &quot;prog&quot;, but because
+          // it contains a single expression, our parser
+          // reduces it to the expression itself.
+          type: &quot;binary&quot;,
+          operator: &quot;+&quot;,
+          left: { type: &quot;var&quot;, value: &quot;a&quot; },
+          right: { type: &quot;var&quot;, value: &quot;b&quot; }
+        }
+      }
+    },
+    // second line:
+    {
+      type: &quot;call&quot;,
+      func: { type: &quot;var&quot;, value: &quot;print&quot; },
+      args: [{
+        type: &quot;call&quot;,
+        func: { type: &quot;var&quot;, value: &quot;sum&quot; },
+        args: [ { type: &quot;num&quot;, value: 1 },
+                { type: &quot;num&quot;, value: 2 } ]
+      }]
+    }
+  ]
+}
+&lt;/pre&gt;
+
+&lt;p&gt;The main difficulty in writing a parser consists in a failure to properly organize the code. The parser should operate at a higher level than reading characters from a string. A few advices on how to keep complexity manageable:&lt;/p&gt;
+
+&lt;p&gt;· Write many functions and keep them small. In every function, do one thing and do it well. 多写函数并尽量保持单个函数的小，在每个函数中，一次做好一件事。&lt;/p&gt;
+
+&lt;p&gt;· Do not try to use regexps for parsing. They don’t work. Regexps can be helpful in the lexer though, but I suggest to limit them to very simple things. 不要在词法分析时使用正则表达式，此时正则不管用。 虽然正则有助于词法的分析，但建议在处理简单的事情时，克制对正则的使用。&lt;/p&gt;
+
+&lt;p&gt;· Don’t attempt to guess. When unsure how to parse something, throw an error and make sure the message contains the error location (line/column). 绝对不要胡乱瞎猜。如果词法分析时遇到了不确定的情况，可以抛出异常，并确保错误信息里包含了异常发生的代码行/列。&lt;/p&gt;
+
+&lt;h3 id=&quot;input-stream---the-character-input-stream-字符输入流&quot;&gt;Input stream - The character input stream 字符输入流&lt;/h3&gt;
+
+&lt;p&gt;This is the smallest part. We’re going to create a “stream object” which provides operations to read characters from a string. 首先编写“流对象”，提供一组操作，从字符串里读取字符。&lt;/p&gt;
+
+&lt;p&gt;A stream object has 4 methods 流对象包含4种方法:&lt;/p&gt;
+
+&lt;p&gt;· peek() — returns the next value but without removing it from the stream. 
+返回下一个值。但不在流中将其去除。&lt;/p&gt;
+
+&lt;p&gt;· next() — returns the next value and also discards it from the stream.
+返回下一个值。同时在流中将其去除。&lt;/p&gt;
+
+&lt;p&gt;· eof() — returns true if and only if there are no more values in the stream.
+返回真，当且仅当流中没有更多值。&lt;/p&gt;
+
+&lt;p&gt;· croak(msg) — does throw new Error(msg). 
+抛出异常new Error(msg)。&lt;/p&gt;
+
+&lt;p&gt;The full code of “InputStream” object:&lt;/p&gt;
+
+&lt;pre&gt;
+function InputStream(input) {
+    var pos = 0, line = 1, col = 0;
+    return {
+        next  : next,
+        peek  : peek,
+        eof   : eof,
+        croak : croak,
+    };
+    function next() {
+        var ch = input.charAt(pos++);
+        if (ch == &quot;\n&quot;) line++, col = 0; else col++;
+        return ch;
+    }
+    function peek() {
+        return input.charAt(pos);
+    }
+    function eof() {
+        return peek() == &quot;&quot;;
+    }
+    function croak(msg) {
+        throw new Error(msg + &quot; (&quot; + line + &quot;:&quot; + col + &quot;)&quot;);
+    }
+}
+&lt;/pre&gt;
+
+&lt;h3 id=&quot;token-stream---the-token-input-stream-分词输入流&quot;&gt;Token stream - The token input stream 分词输入流&lt;/h3&gt;
+
+&lt;h3 id=&quot;the-ast&quot;&gt;The AST&lt;/h3&gt;
+
+&lt;h3 id=&quot;the-parser&quot;&gt;The parser&lt;/h3&gt;
+
+&lt;h2 id=&quot;simple-interpreter&quot;&gt;Simple interpreter&lt;/h2&gt;
+
+&lt;h3 id=&quot;test-what-we-have&quot;&gt;Test what we have&lt;/h3&gt;
+
+&lt;h3 id=&quot;adding-new-constructs&quot;&gt;Adding new constructs&lt;/h3&gt;
+
+&lt;h3 id=&quot;how-fast-are-we&quot;&gt;How fast are we?&lt;/h3&gt;
+
+&lt;h2 id=&quot;cps-evaluator&quot;&gt;CPS Evaluator&lt;/h2&gt;
+
+&lt;h3 id=&quot;guarding-the-stack&quot;&gt;Guarding the stack&lt;/h3&gt;
+
+&lt;h3 id=&quot;continuations&quot;&gt;Continuations&lt;/h3&gt;
+
+&lt;h4 id=&quot;yield-advanced&quot;&gt;Yield (advanced)&lt;/h4&gt;
+
+&lt;h2 id=&quot;compiling-to-js&quot;&gt;Compiling to JS&lt;/h2&gt;
+
+&lt;h3 id=&quot;js-code-generator&quot;&gt;JS code generator&lt;/h3&gt;
+
+&lt;h3 id=&quot;cps-transformer&quot;&gt;CPS transformer&lt;/h3&gt;
+
+&lt;h4 id=&quot;samples&quot;&gt;Samples&lt;/h4&gt;
+
+&lt;h4 id=&quot;improvements&quot;&gt;Improvements&lt;/h4&gt;
+
+&lt;h3 id=&quot;optimizer&quot;&gt;Optimizer&lt;/h3&gt;
+
+&lt;h2 id=&quot;wrapping-up&quot;&gt;Wrapping up&lt;/h2&gt;
+
+&lt;h2 id=&quot;real-samples&quot;&gt;Real samples&lt;/h2&gt;
+
+&lt;h3 id=&quot;primitives&quot;&gt;Primitives&lt;/h3&gt;
+
+&lt;h3 id=&quot;catdir&quot;&gt;catDir&lt;/h3&gt;
+
+&lt;h3 id=&quot;copytree-sequential&quot;&gt;copyTree sequential&lt;/h3&gt;
+
+&lt;h3 id=&quot;copytree-parallel&quot;&gt;copyTree parallel&lt;/h3&gt;
+
+&lt;h3 id=&quot;in-fairness-to-node&quot;&gt;In fairness to Node&lt;/h3&gt;
+
+&lt;h3 id=&quot;error-handling&quot;&gt;Error handling&lt;/h3&gt;
+
+&lt;p&gt;· How to implement a programming language in JavaScript - Loi Wu -&lt;/p&gt;
+
+&lt;div class=&quot;scale&quot;&gt;&lt;img src=&quot;img/hugkiss.jpg&quot; alt=&quot;λanguage&quot; /&gt;&lt;/div&gt;
+
+</description>
+            <pubDate>Fri, 26 Oct 2018 11:00:00 +0800</pubDate>
+            <link>http://localhost:4000#/2018/10/26/Language.html</link>
+            <guid isPermaLink="true">http://localhost:4000#/2018/10/26/Language.html</guid>
+            
+            
+        </item>
+        
+        <item>
+            <title>Effective JavaScript</title>
+            <description>&lt;p&gt;Effective JavaScript&lt;/p&gt;
+
+&lt;h2 id=&quot;1---accustoming-yourself-to-javascript&quot;&gt;1 - Accustoming Yourself to JavaScript&lt;/h2&gt;
+
+&lt;h3 id=&quot;item-1-know-which-javascript-you-are-using&quot;&gt;Item 1: Know Which JavaScript You Are Using&lt;/h3&gt;
+
+&lt;p&gt;✦ Decide which versions of JavaScript your application supports.&lt;/p&gt;
+
+&lt;p&gt;✦ Be sure that any JavaScript features you use are supported by all environments where your application runs.&lt;/p&gt;
+
+&lt;p&gt;✦ Always test strict code in environments that perform the strict-mode checks.&lt;/p&gt;
+
+&lt;p&gt;✦ Beware of concatenating scripts that differ in their expectations about strict mode.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-2-understand-javascripts-floating-point-numbers&quot;&gt;Item 2: Understand JavaScript’s Floating-Point Numbers&lt;/h3&gt;
+
+&lt;p&gt;✦ JavaScript numbers are double-precision floating-point numbers.&lt;/p&gt;
+
+&lt;p&gt;✦ Integers in JavaScript are just a subset of doubles rather than a separate datatype.&lt;/p&gt;
+
+&lt;p&gt;✦ Bitwise operators treat numbers as if they were 32-bit signed integers.&lt;/p&gt;
+
+&lt;p&gt;✦ Be aware of limitations of precisions in flaoting-point arithmetic.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-3-beware-of-implicit-coercions&quot;&gt;Item 3: Beware of Implicit Coercions&lt;/h3&gt;
+
+&lt;p&gt;✦ Type errors can be silently hidden by implicit coercions.&lt;/p&gt;
+
+&lt;p&gt;✦ The + operator is overloaded to do addition or string concatenation depending on its argument types.&lt;/p&gt;
+
+&lt;p&gt;✦ Objects are coerced to numbers via valueOf and to strings via toString.&lt;/p&gt;
+
+&lt;p&gt;✦ Objects with valueOf methods should implement a toString method taht provides a string representation of the number produced by valueOf.&lt;/p&gt;
+
+&lt;p&gt;✦ Use typeof or comparison to undefined rather than truthiness to test for undefined values.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-4-prefer-primitives-to-object-wrappers&quot;&gt;Item 4: Prefer Primitives to Object Wrappers&lt;/h3&gt;
+
+&lt;p&gt;✦ Object wrappers for primitive types do not have the same behavior as their primitive calues when compared for equality.&lt;/p&gt;
+
+&lt;p&gt;✦ Getting and setting properties on primitives implicitly creates object wrappers.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-5-avoid-using--with-mixed-types&quot;&gt;Item 5: Avoid using == with Mixed Types&lt;/h3&gt;
+
+&lt;p&gt;✦ The == operator applies a confusing set of implicit coercoins when its arguments are of different types.&lt;/p&gt;
+
+&lt;p&gt;✦ Use === to make it clear to your readers that your comparison does not involve any implicit coercions.&lt;/p&gt;
+
+&lt;p&gt;✦ Use your own explicit coercions when comparing values of different types to make your program’s behavior clearer.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-6-learn-the-limits-of-semicolon-insertion&quot;&gt;Item 6: Learn the Limits of Semicolon Insertion&lt;/h3&gt;
+
+&lt;p&gt;✦ Semicolons are only ever inferred before a }, at the end of a line, or at the end of a program.&lt;/p&gt;
+
+&lt;p&gt;✦ Semicolons are only ever inffered when the next token cannot be parsed.&lt;/p&gt;
+
+&lt;p&gt;✦ Never omit a semicolon before a statement beginning with (, [, +, -, or /.&lt;/p&gt;
+
+&lt;p&gt;✦ When concatenating scripts, insert semicolons explicitly between scripts.&lt;/p&gt;
+
+&lt;p&gt;✦ Never put a newline before the argument to return, throw, break, continue, ++, or –.&lt;/p&gt;
+
+&lt;p&gt;✦ Semicolons are never inferred as separators in the head of a for loop or as empty statements.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-7-think-of-strings-as-sequences-of-16-bit-code-units&quot;&gt;Item 7: Think of Strings As Sequences of 16-Bit Code Units&lt;/h3&gt;
+
+&lt;p&gt;✦ JavaScript strings consist of 16-bit code units, not Unicode code points.&lt;/p&gt;
+
+&lt;p&gt;✦ Unicode code points 2^16 and above are represented in JavaScript by two code units, known as a surrogate pair.&lt;/p&gt;
+
+&lt;p&gt;✦ Surrogate pairs throw off string element counts, affecting length, charAt, charCodeAt, and regular expression patterns such as “.”.&lt;/p&gt;
+
+&lt;p&gt;✦ Use third-party libraries for writing code point-aware string manipulation.&lt;/p&gt;
+
+&lt;p&gt;✦ Whenever you are using a library that works with strings, consult the documentation to see how it handles the full range of code points.&lt;/p&gt;
+
+&lt;h2 id=&quot;2---variable-scope&quot;&gt;2 - Variable Scope&lt;/h2&gt;
+
+&lt;h3 id=&quot;item-8-minimize-use-of-the-global-object&quot;&gt;Item 8: Minimize Use of the Global Object&lt;/h3&gt;
+
+&lt;p&gt;✦ Avoid declaring global variables.&lt;/p&gt;
+
+&lt;p&gt;✦ Declare variables as locally as possible.&lt;/p&gt;
+
+&lt;p&gt;✦ Avoid adding properties to the global object.&lt;/p&gt;
+
+&lt;p&gt;✦ Use the global object for platform feature detection.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-9-always-declare-local-variables&quot;&gt;Item 9: Always Declare Local Variables&lt;/h3&gt;
+
+&lt;p&gt;✦ Always declare new local variables with var.&lt;/p&gt;
+
+&lt;p&gt;✦ Consider using lint tools to help check for unbound variables.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-10-avoid-with&quot;&gt;Item 10: Avoid with&lt;/h3&gt;
+
+&lt;p&gt;✦ Avoid using with statements.&lt;/p&gt;
+
+&lt;p&gt;✦ Use short variable names for repeated access to an object.&lt;/p&gt;
+
+&lt;p&gt;✦ Explicitly bind local variables to object properties instead of implicitly binding them with a with statement.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-11-get-comfortable-with-closures&quot;&gt;Item 11: Get Comfortable with Closures&lt;/h3&gt;
+
+&lt;p&gt;✦ Functions can refer to variables defined in outer scopes.&lt;/p&gt;
+
+&lt;p&gt;✦ Closures can outlive the function that creates them.&lt;/p&gt;
+
+&lt;p&gt;✦ Closures internally store references to their outer variables, and can both read and update their stored variables.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-12-understand-variable-hoisting&quot;&gt;Item 12: Understand Variable Hoisting&lt;/h3&gt;
+
+&lt;p&gt;✦ Variable declarations within a block are implicitly hoisted to the top of their enclosing function.&lt;/p&gt;
+
+&lt;p&gt;✦ Redeclarations of a variable are treated as a single variable.&lt;/p&gt;
+
+&lt;p&gt;✦ Consider manually hoisting local variable declarations to avoid confusion.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-13-use-immediately-invoked-function-expressions-to-create-local-scopes&quot;&gt;Item 13: Use Immediately Invoked Function Expressions to Create Local Scopes&lt;/h3&gt;
+
+&lt;p&gt;✦ Understand the difference between binding and assignment.&lt;/p&gt;
+
+&lt;p&gt;✦ Closures capture their outer variables by reference, not by value.&lt;/p&gt;
+
+&lt;p&gt;✦ Use immediately invoked function expressions (IIFEs) to create local scopes.&lt;/p&gt;
+
+&lt;p&gt;✦ Be aware of the cases where wrapping a block in an IIFE can change its behavior.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-14-beware-of-unportable-scoping-of-named-function-expressions&quot;&gt;Item 14: Beware of Unportable Scoping of Named Function Expressions&lt;/h3&gt;
+
+&lt;p&gt;✦ Use named function expressions to improve stack traces in Error objects and debuggers.&lt;/p&gt;
+
+&lt;p&gt;✦ Beware of pollution of function expression scope with Object .prototype in ES3 and buggy JavaScript environments.&lt;/p&gt;
+
+&lt;p&gt;✦ Beware of hoisting and duplicate allocation of named function expressions in buggy JavaScript environments.&lt;/p&gt;
+
+&lt;p&gt;✦ Consider avoiding named function expressions or removing them before shipping.&lt;/p&gt;
+
+&lt;p&gt;✦ If you are shipping in properly implemented ES5 environments, you’ve got nothing to worry about.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-15-beware-of-unportable-scoping-of-block-local-function-declarations&quot;&gt;Item 15: Beware of Unportable Scoping of Block-Local Function Declarations&lt;/h3&gt;
+
+&lt;p&gt;✦ Always keep function declarations at the outermost level of a program or a containing function to avoid unportable behavior.&lt;/p&gt;
+
+&lt;p&gt;✦ Use var declarations with conditional assignment instead of conditional function declarations.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-16-avoid-creating-local-variables-with-eval&quot;&gt;Item 16: Avoid Creating Local Variables with eval&lt;/h3&gt;
+
+&lt;p&gt;✦ Avoid creating variables with eval that pollute the caller’s scope.&lt;/p&gt;
+
+&lt;p&gt;✦ If eval code might create global variables, wrap the call in a nested function to prevent scope pollution.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-17-prefer-indirect-eval-to-direct-eval&quot;&gt;Item 17: Prefer Indirect eval to Direct eval&lt;/h3&gt;
+
+&lt;p&gt;✦ Wrap eval in a sequence expression with a useless literal to force the use of indirect eval.&lt;/p&gt;
+
+&lt;p&gt;✦ Prefer indirect eval to direct eval whenever possible.&lt;/p&gt;
+
+&lt;h2 id=&quot;3---working-with-functions&quot;&gt;3 - Working with Functions&lt;/h2&gt;
+
+&lt;h3 id=&quot;item-18-understand-the-difference-between-function-method-and-constructor-calls&quot;&gt;Item 18: Understand the Difference between Function, Method, and Constructor Calls&lt;/h3&gt;
+
+&lt;p&gt;✦ Method calls provide the object in which the method property is looked up as their receiver.&lt;/p&gt;
+
+&lt;p&gt;✦ Function calls provide the global object (or undefined for strict func- tions) as their receiver. Calling methods with function call syntax is rarely useful.&lt;/p&gt;
+
+&lt;p&gt;✦ Constructors are called with new and receive a fresh object as their receiver.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-19-get-comfortable-using-higher-order-functions&quot;&gt;Item 19: Get Comfortable Using Higher-Order Functions&lt;/h3&gt;
+
+&lt;p&gt;✦ Higher-order functions are functions that take other functions as arguments or return functions as their result.&lt;/p&gt;
+
+&lt;p&gt;✦ Familiarize yourself with higher-order functions in existing libraries.&lt;/p&gt;
+
+&lt;p&gt;✦ Learn to detect common coding patterns that can be replaced by higher-order functions.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-20-use-call-to-call-methods-with-a-custom-receiver&quot;&gt;Item 20: Use call to Call Methods with a Custom Receiver&lt;/h3&gt;
+
+&lt;p&gt;✦ Use the call method to call a function with a custom receiver.&lt;/p&gt;
+
+&lt;p&gt;✦ Use the call method for calling methods that may not exist on a given object.&lt;/p&gt;
+
+&lt;p&gt;✦ Use the call method for defining higher-order functions that allow clients to provide a receiver for the callback.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-21-use-apply-to-call-functions-with-different-numbers-of-arguments&quot;&gt;Item 21: Use apply to Call Functions with Different Numbers of Arguments&lt;/h3&gt;
+
+&lt;p&gt;✦ Use the apply method to call variadic functions with a computed array of arguments.&lt;/p&gt;
+
+&lt;p&gt;✦ Use the first argument of apply to provide a receiver for variadic methods.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-22-use-arguments-to-create-variadic-functions&quot;&gt;Item 22: Use arguments to Create Variadic Functions&lt;/h3&gt;
+
+&lt;p&gt;✦ Use the implicit arguments object to implement variable-arity functions.&lt;/p&gt;
+
+&lt;p&gt;✦ Consider providing additional fixed-arity versions of the variadic functions you provide so that your consumers don’t need to use the apply method.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-23-never-modify-the-arguments-object&quot;&gt;Item 23: Never Modify the arguments Object&lt;/h3&gt;
+
+&lt;p&gt;✦ Never modify the arguments object.&lt;/p&gt;
+
+&lt;p&gt;✦ Copy the arguments object to a real array using [].slice.call(arguments) before modifying it.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-24-use-a-variable-to-save-a-reference-to-arguments&quot;&gt;Item 24: Use a Variable to Save a Reference to arguments&lt;/h3&gt;
+
+&lt;p&gt;✦ Be aware of the function nesting level when referring to arguments.&lt;/p&gt;
+
+&lt;p&gt;✦ Bind an explicitly scoped reference to arguments in order to refer to it from nested functions.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-25-use-bind-to-extract-methods-with-a-fixed-receiver&quot;&gt;Item 25: Use bind to Extract Methods with a Fixed Receiver&lt;/h3&gt;
+
+&lt;p&gt;✦ Beware that extracting a method does not bind the method’s receiver to its object.&lt;/p&gt;
+
+&lt;p&gt;✦ When passing an object’s method to a higher-order function, use an anonymous function to call the method on the appropriate receiver.&lt;/p&gt;
+
+&lt;p&gt;✦ Use bind as a shorthand for creating a function bound to the appropriate receiver.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-26-use-bind-to-curry-functions&quot;&gt;Item 26: Use bind to Curry Functions&lt;/h3&gt;
+
+&lt;p&gt;✦ Use bind to curry a function, that is, to create a delegating function with a fixed subset of the required arguments.&lt;/p&gt;
+
+&lt;p&gt;✦ Pass null or undefined as the receiver argument to curry a function that ignores its receiver.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-27-prefer-closures-to-strings-for-encapsulating-code&quot;&gt;Item 27: Prefer Closures to Strings for Encapsulating Code&lt;/h3&gt;
+
+&lt;p&gt;✦ Never include local references in strings when sending them to APIs that execute them with eval.&lt;/p&gt;
+
+&lt;p&gt;✦ Prefer APIs that accept functions to call rather than strings to eval.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-28-avoid-relying-on-the-tostring-method-of-functions&quot;&gt;Item 28: Avoid Relying on the toString Method of Functions&lt;/h3&gt;
+
+&lt;p&gt;✦ JavaScript engines are not required to produce accurate reflections of function source code via toString.&lt;/p&gt;
+
+&lt;p&gt;✦ Never rely on precise details of function source, since different engines may produce different results from toString.&lt;/p&gt;
+
+&lt;p&gt;✦ The results of toString do not expose the values of local variables stored in a closure.&lt;/p&gt;
+
+&lt;p&gt;✦ In general, avoid using toString on functions.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-29-avoid-nonstandard-stack-inspection-properties&quot;&gt;Item 29: Avoid Nonstandard Stack Inspection Properties&lt;/h3&gt;
+
+&lt;p&gt;✦ Avoid the nonstandard arguments.caller and arguments.callee, because they are not reliably portable.&lt;/p&gt;
+
+&lt;p&gt;✦ Avoid the nonstandard caller property of functions, because it does not reliably contain complete information about the stack.&lt;/p&gt;
+
+&lt;h2 id=&quot;4---objects-and-prototypes&quot;&gt;4 - Objects and Prototypes&lt;/h2&gt;
+
+&lt;h3 id=&quot;item-30-understand-the-difference-between-prototype-getprototypeof-and__proto__&quot;&gt;Item 30: Understand the Difference between prototype, getPrototypeOf, and__proto__&lt;/h3&gt;
+
+&lt;p&gt;✦ C.prototype determines the prototype of objects created by new C().&lt;/p&gt;
+
+&lt;p&gt;✦ Object.getPrototypeOf(obj) is the standard ES5 function for retrieving the prototype of an object.&lt;/p&gt;
+
+&lt;p&gt;✦ obj.&lt;strong&gt;proto&lt;/strong&gt; is a nonstandard mechanism for retrieving the proto- type of an object.&lt;/p&gt;
+
+&lt;p&gt;✦ A class is a design pattern consisting of a constructor function and an associated prototype.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-31-prefer-objectgetprototypeof-to-proto&quot;&gt;Item 31: Prefer Object.getPrototypeOf to &lt;strong&gt;proto&lt;/strong&gt;&lt;/h3&gt;
+
+&lt;p&gt;✦ Prefer the standards-compliant Object.getPrototypeOf to the non- standard &lt;strong&gt;proto&lt;/strong&gt; property.&lt;/p&gt;
+
+&lt;p&gt;✦ Implement Object.getPrototypeOf in non-ES5 environments that support &lt;strong&gt;proto&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-32-never-modify-proto&quot;&gt;Item 32: Never Modify &lt;strong&gt;proto&lt;/strong&gt;&lt;/h3&gt;
+
+&lt;p&gt;✦ Never modify an object’s &lt;strong&gt;proto&lt;/strong&gt; property.&lt;/p&gt;
+
+&lt;p&gt;✦ Use Object.create to provide a custom prototype for new objects.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-33-make-your-constructors-new-agnostic&quot;&gt;Item 33: Make Your Constructors new-Agnostic&lt;/h3&gt;
+
+&lt;p&gt;✦ Make a constructor agnostic to its caller’s syntax by reinvoking itself with new or with Object.create.&lt;/p&gt;
+
+&lt;p&gt;✦ Document clearly when a function expects to be called with new.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-34-store-methods-on-prototypes&quot;&gt;Item 34: Store Methods on Prototypes&lt;/h3&gt;
+
+&lt;p&gt;✦ Storing methods on instance objects creates multiple copies of the functions, one per instance object.&lt;/p&gt;
+
+&lt;p&gt;✦ Prefer storing methods on prototypes over storing them on instance objects.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-35-use-closures-to-store-private-data&quot;&gt;Item 35: Use Closures to Store Private Data&lt;/h3&gt;
+
+&lt;p&gt;✦ Closure variables are private, accessible only to local references.&lt;/p&gt;
+
+&lt;p&gt;✦ Use local variables as private data to enforce information hiding within methods.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-36-store-instance-state-only-on-instance-objects&quot;&gt;Item 36: Store Instance State Only on Instance Objects&lt;/h3&gt;
+
+&lt;p&gt;✦ Mutable data can be problematic when shared, and prototypes are shared between all their instances.&lt;/p&gt;
+
+&lt;p&gt;✦ Store mutable per-instance state on instance objects.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-37-recognize-the-implicit-binding-of-this&quot;&gt;Item 37: Recognize the Implicit Binding of this&lt;/h3&gt;
+
+&lt;p&gt;✦ The scope of this is always determined by its nearest enclosing function.&lt;/p&gt;
+
+&lt;p&gt;✦ Use a local variable, usually called self, me, or that, to make a this-binding available to inner functions.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-38-call-superclass-constructors-from-subclass-constructors&quot;&gt;Item 38: Call Superclass Constructors from Subclass Constructors&lt;/h3&gt;
+
+&lt;p&gt;✦ Call the superclass constructor explicitly from subclass construc- tors, passing this as the explicit receiver.&lt;/p&gt;
+
+&lt;p&gt;✦ Use Object.create to construct the subclass prototype object to avoid calling the superclass constructor.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-39-never-reuse-superclass-property-names&quot;&gt;Item 39: Never Reuse Superclass Property Names&lt;/h3&gt;
+
+&lt;p&gt;✦ Be aware of all property names used by your superclasses.&lt;/p&gt;
+
+&lt;p&gt;✦ Never reuse a superclass property name in a subclass.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-40-avoid-inheriting-from-standard-classes&quot;&gt;Item 40: Avoid Inheriting from Standard Classes&lt;/h3&gt;
+
+&lt;p&gt;✦ Inheriting from standard classes tends to break due to special internal properties such as [[Class]].&lt;/p&gt;
+
+&lt;p&gt;✦ Prefer delegating to properties instead of inheriting from standard classes.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-41-treat-prototypes-as-an-implementation-detail&quot;&gt;Item 41: Treat Prototypes As an Implementation Detail&lt;/h3&gt;
+
+&lt;p&gt;✦ Objects are interfaces; prototypes are implementations.&lt;/p&gt;
+
+&lt;p&gt;✦ Avoid inspecting the prototype structure of objects you don’t control.&lt;/p&gt;
+
+&lt;p&gt;✦ Avoid inspecting properties that implement the internals of objects you don’t control.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-42-avoid-reckless-monkey-patching&quot;&gt;Item 42: Avoid Reckless Monkey-Patching&lt;/h3&gt;
+
+&lt;p&gt;✦ Avoid reckless monkey-patching.&lt;/p&gt;
+
+&lt;p&gt;✦ Document any monkey-patching performed by a library.&lt;/p&gt;
+
+&lt;p&gt;✦ Consider making monkey-patching optional by performing the mod- ifications in an exported function.&lt;/p&gt;
+
+&lt;p&gt;✦ Use monkey-patching to provide polyfills for missing standard APIs.&lt;/p&gt;
+
+&lt;h2 id=&quot;5---arrays-and-dictionaries&quot;&gt;5 - Arrays and Dictionaries&lt;/h2&gt;
+
+&lt;h3 id=&quot;item-43-build-lightweight-dictionaries-from-direct-instances-of-object&quot;&gt;Item 43: Build Lightweight Dictionaries from Direct Instances of Object&lt;/h3&gt;
+
+&lt;p&gt;✦ Use object literals to construct lightweight dictionaries.&lt;/p&gt;
+
+&lt;p&gt;✦ Lightweight dictionaries should be direct descendants of Object.prototype to protect against prototype pollution in for…in loops.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-44-use-null-prototypes-to-prevent-prototype-pollution&quot;&gt;Item 44: Use null Prototypes to Prevent Prototype Pollution&lt;/h3&gt;
+
+&lt;p&gt;✦ In ES5, use Object.create(null) to create prototype-free empty objects that are less susceptible to pollution.&lt;/p&gt;
+
+&lt;p&gt;✦ In older environments, consider using { &lt;strong&gt;proto&lt;/strong&gt;: null }.&lt;/p&gt;
+
+&lt;p&gt;✦ But beware that &lt;strong&gt;proto&lt;/strong&gt; is neither standard nor entirely portable and may be removed in future JavaScript environments.&lt;/p&gt;
+
+&lt;p&gt;✦ Never use the name “&lt;strong&gt;proto&lt;/strong&gt;” as a dictionary key since some environments treat this property specially.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-45-use-hasownproperty-to-protect-against-prototype-pollution&quot;&gt;Item 45: Use hasOwnProperty to Protect Against Prototype Pollution&lt;/h3&gt;
+
+&lt;p&gt;✦ Use hasOwnProperty to protect against prototype pollution.&lt;/p&gt;
+
+&lt;p&gt;✦ Use lexical scope and call to protect against overriding of the hasOwnProperty method.&lt;/p&gt;
+
+&lt;p&gt;✦ Consider implementing dictionary operations in a class that encapsulates the boilerplate hasOwnProperty tests.&lt;/p&gt;
+
+&lt;p&gt;✦ Use a dictionary class to protect against the use of “&lt;strong&gt;proto&lt;/strong&gt;” as a key.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-46-prefer-arrays-to-dictionaries-for-ordered-collections&quot;&gt;Item 46: Prefer Arrays to Dictionaries for Ordered Collections&lt;/h3&gt;
+
+&lt;p&gt;✦ Avoid relying on the order in which for…in loops enumerate object properties.&lt;/p&gt;
+
+&lt;p&gt;✦ If you aggregate data in a dictionary, make sure the aggregate oper- ations are order-insensitive.&lt;/p&gt;
+
+&lt;p&gt;✦ Use arrays instead of dictionary objects for ordered collections.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-47-never-add-enumerable-properties-to-objectprototype&quot;&gt;Item 47: Never Add Enumerable Properties to Object.prototype&lt;/h3&gt;
+
+&lt;p&gt;✦ Avoid adding properties to Object.prototype.&lt;/p&gt;
+
+&lt;p&gt;✦ Consider writing a function instead of an Object.prototype method.&lt;/p&gt;
+
+&lt;p&gt;✦ If you do add properties to Object.prototype, use ES5’s Object.defineProperty to define them as nonenumerable properties.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-48-avoid-modifying-an-object-during-enumeration&quot;&gt;Item 48: Avoid Modifying an Object during Enumeration&lt;/h3&gt;
+
+&lt;p&gt;✦ Make sure not to modify an object while enumerating its properties with a for…in loop.&lt;/p&gt;
+
+&lt;p&gt;✦ Use a while loop or classic for loop instead of a for…in loop when iterating over an object whose contents might change during the loop.&lt;/p&gt;
+
+&lt;p&gt;✦ For predictable enumeration over a changing data structure, con- sider using a sequential data structure such as an array instead of a dictionary object.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-49-prefer-for-loops-to-forin-loops-for-array-iteration&quot;&gt;Item 49: Prefer for Loops to for…in Loops for Array Iteration&lt;/h3&gt;
+
+&lt;p&gt;■ Always use a for loop rather than a for…in loop for iterating over the indexed properties of an array.&lt;/p&gt;
+
+&lt;p&gt;■ Consider storing the length property of an array in a local vari- able before a loop to avoid recomputing the property lookup.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-50-prefer-iteration-methods-to-loops&quot;&gt;Item 50: Prefer Iteration Methods to Loops&lt;/h3&gt;
+
+&lt;p&gt;✦ Use iteration methods such as Array.prototype.map in place of for loops to make code more read- able and avoid duplicating loop control logic.&lt;/p&gt;
+
+&lt;p&gt;✦ Use custom iteration functions to abstract common loop patterns that are not provided by the standard library.&lt;/p&gt;
+
+&lt;p&gt;✦ Traditional loops can still be appropriate in cases where early exit is necessary; alternatively, the some and every methods can be used for early exit.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-51-reuse-generic-array-methods-on-array-like-objects&quot;&gt;Item 51: Reuse Generic Array Methods on Array-Like Objects&lt;/h3&gt;
+
+&lt;p&gt;✦ Reuse generic Array methods on array-like objects by extracting method objects and using their call method.&lt;/p&gt;
+
+&lt;p&gt;✦ Any object can be used with generic Array methods if it has indexed properties and an appropriate length property.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-52-prefer-array-literals-to-the-array-constructor&quot;&gt;Item 52: Prefer Array Literals to the Array Constructor&lt;/h3&gt;
+
+&lt;p&gt;✦ The Array constructor behaves differently if its first argument is a number.&lt;/p&gt;
+
+&lt;p&gt;✦ Use array literals instead of the Array constructor.&lt;/p&gt;
+
+&lt;h2 id=&quot;6---library-and-api-design&quot;&gt;6 - Library and API Design&lt;/h2&gt;
+
+&lt;h3 id=&quot;item-53-maintain-consistent-conventions&quot;&gt;Item 53: Maintain Consistent Conventions&lt;/h3&gt;
+
+&lt;p&gt;✦ Use consistent conventions for variable names and function signatures.&lt;/p&gt;
+
+&lt;p&gt;✦ Don’t deviate from conventions your users are likely to encounter in other parts of their development platform.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-54-treat-undefined-as-no-value&quot;&gt;Item 54: Treat undefined As “No Value”&lt;/h3&gt;
+
+&lt;p&gt;✦ Avoid using undefined to represent anything other than the absence of a specific value.&lt;/p&gt;
+
+&lt;p&gt;✦ Use descriptive string values or objects with named boolean proper- ties, rather than undefined or null, to represent application-specific flags.&lt;/p&gt;
+
+&lt;p&gt;✦ Test for undefined instead of checking arguments.length to provide parameter default values.&lt;/p&gt;
+
+&lt;p&gt;✦ Never use truthiness tests for parameter default values that should allow 0, NaN, or the empty string as valid arguments.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-55-accept-options-objects-for-keyword-arguments&quot;&gt;Item 55: Accept Options Objects for Keyword Arguments&lt;/h3&gt;
+
+&lt;p&gt;✦ Use options objects to make APIs more readable and memorable.&lt;/p&gt;
+
+&lt;p&gt;✦ The arguments provided by an options object should all be treated as optional.&lt;/p&gt;
+
+&lt;p&gt;✦ Use an extend utility function to abstract out the logic of extracting values from options objects.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-56-avoid-unnecessary-state&quot;&gt;Item 56: Avoid Unnecessary State&lt;/h3&gt;
+
+&lt;p&gt;✦ Prefer stateless APIs where possible.&lt;/p&gt;
+
+&lt;p&gt;✦ When providing stateful APIs, document the relevant state that each operation depends on.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-57-use-structural-typing-for-flexible-interfaces&quot;&gt;Item 57: Use Structural Typing for Flexible Interfaces&lt;/h3&gt;
+
+&lt;p&gt;✦ Use structural typing (also known as duck typing) for flexible object interfaces.&lt;/p&gt;
+
+&lt;p&gt;✦ Avoid inheritance when structural interfaces are more flexible and lightweight.&lt;/p&gt;
+
+&lt;p&gt;✦ Use mock objects, that is, alternative implementations of interfaces that provide repeatable behavior, for unit testing.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-58-distinguish-between-array-and-array-like&quot;&gt;Item 58: Distinguish between Array and Array-Like&lt;/h3&gt;
+
+&lt;p&gt;✦ Never overload structural types with other overlapping types.&lt;/p&gt;
+
+&lt;p&gt;✦ When overloading a structural type with other types, test for the other types first.&lt;/p&gt;
+
+&lt;p&gt;✦ Accept true arrays instead of array-like objects when overloading with other object types.&lt;/p&gt;
+
+&lt;p&gt;✦ Document whether your API accepts true arrays or array-like values.&lt;/p&gt;
+
+&lt;p&gt;✦ Use ES5’s Array.isArray to test for true arrays.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-59-avoid-excessive-coercion&quot;&gt;Item 59: Avoid Excessive Coercion&lt;/h3&gt;
+
+&lt;p&gt;✦ Avoid mixing coercions with overloading.&lt;/p&gt;
+
+&lt;p&gt;✦ Consider defensively guarding against unexpected inputs.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-60-support-method-chaining&quot;&gt;Item 60: Support Method Chaining&lt;/h3&gt;
+
+&lt;p&gt;✦ Use method chaining to combine stateless operations.&lt;/p&gt;
+
+&lt;p&gt;✦ Support method chaining by designing stateless methods that produce new objects.&lt;/p&gt;
+
+&lt;p&gt;✦ Support method chaining in stateful methods by returning this.&lt;/p&gt;
+
+&lt;h2 id=&quot;7---concurrency&quot;&gt;7 - Concurrency&lt;/h2&gt;
+
+&lt;h3 id=&quot;item-61-dont-block-the-event-queue-on-io&quot;&gt;Item 61: Don’t Block the Event Queue on I/O&lt;/h3&gt;
+
+&lt;p&gt;✦ Asynchronous APIs take callbacks to defer processing of expensive operations and avoid blocking the main application.&lt;/p&gt;
+
+&lt;p&gt;✦ JavaScript accepts events concurrently but processes event handlers sequentially using an event queue.&lt;/p&gt;
+
+&lt;p&gt;✦ Never use blocking I/O in an application’s event queue.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-62-use-nested-or-named-callbacks-for-asynchronous-sequencing&quot;&gt;Item 62: Use Nested or Named Callbacks for Asynchronous Sequencing&lt;/h3&gt;
+
+&lt;p&gt;✦ Use nested or named callbacks to perform several asynchronous operations in sequence.&lt;/p&gt;
+
+&lt;p&gt;✦ Try to strike a balance between excessive nesting of callbacks and awkward naming of non-nested callbacks.&lt;/p&gt;
+
+&lt;p&gt;✦ Avoid sequencing operations that can be performed concurrently.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-63-be-aware-of-dropped-errors&quot;&gt;Item 63: Be Aware of Dropped Errors&lt;/h3&gt;
+
+&lt;p&gt;✦ Avoid copying and pasting error-handling code by writing shared error-handling functions.&lt;/p&gt;
+
+&lt;p&gt;✦ Make sure to handle all error conditions explicitly to avoid dropped errors.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-64-use-recursion-for-asynchronous-loops&quot;&gt;Item 64: Use Recursion for Asynchronous Loops&lt;/h3&gt;
+
+&lt;p&gt;✦ Loops cannot be asynchronous.&lt;/p&gt;
+
+&lt;p&gt;✦ Use recursive functions to perform iterations in separate turns of the event loop.&lt;/p&gt;
+
+&lt;p&gt;✦ Recursion performed in separate turns of the event loop does not overflow the call stack.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-65-dont-block-the-event-queue-on-computation&quot;&gt;Item 65: Don’t Block the Event Queue on Computation&lt;/h3&gt;
+
+&lt;p&gt;✦ Avoid expensive algorithms in the main event queue.&lt;/p&gt;
+
+&lt;p&gt;✦ On platforms that support it, the Worker API can be used for running long computations in a separate event queue.&lt;/p&gt;
+
+&lt;p&gt;✦ When the Worker API is not available or is too costly, consider break- ing up computations across multiple turns of the event loop.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-66-use-a-counter-to-perform-concurrent-operations&quot;&gt;Item 66: Use a Counter to Perform Concurrent Operations&lt;/h3&gt;
+
+&lt;p&gt;✦ Events in a JavaScript application occur nondeterministically, that is, in unpredictable order.&lt;/p&gt;
+
+&lt;p&gt;✦ Use a counter to avoid data races in concurrent operations.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-67-never-call-asynchronous-callbacks-synchronously&quot;&gt;Item 67: Never Call Asynchronous Callbacks Synchronously&lt;/h3&gt;
+
+&lt;p&gt;✦ Never call an asynchronous callback synchronously, even if the data is immediately available.&lt;/p&gt;
+
+&lt;p&gt;✦ Calling an asynchronous callback synchronously disrupts the expected sequence of operations and can lead to unexpected inter-leaving of code.&lt;/p&gt;
+
+&lt;p&gt;✦ Calling an asynchronous callback synchronously can lead to stack overflows or mishandled exceptions.&lt;/p&gt;
+
+&lt;p&gt;✦ Use an asynchronous API such as setTimeout to schedule an asyn- chronous callback to run in another turn.&lt;/p&gt;
+
+&lt;h3 id=&quot;item-68-use-promises-for-cleaner-asynchronous-logic&quot;&gt;Item 68: Use Promises for Cleaner Asynchronous Logic&lt;/h3&gt;
+
+&lt;p&gt;✦ Promises represent eventual values, that is, concurrent computations that eventually produce a result.&lt;/p&gt;
+
+&lt;p&gt;✦ Use promises to compose different concurrent operations.&lt;/p&gt;
+
+&lt;p&gt;✦ Use promise APIs to avoid data races.&lt;/p&gt;
+
+&lt;p&gt;✦ Use select (also known as choose) for situations where an inten- tional race condition is required.&lt;/p&gt;
+
+&lt;p&gt;————— 低调的配图分界线 —————&lt;/p&gt;
+
+&lt;p&gt;✦ Effective JavaScript - Loi Wu -&lt;/p&gt;
+
+&lt;div class=&quot;scale&quot;&gt;&lt;img src=&quot;img/timg10.jpg&quot; alt=&quot;Effective JavaScript&quot; /&gt;&lt;/div&gt;
+
+</description>
+            <pubDate>Sun, 07 Oct 2018 23:00:00 +0800</pubDate>
+            <link>http://localhost:4000#/2018/10/07/effective-javascript.html</link>
+            <guid isPermaLink="true">http://localhost:4000#/2018/10/07/effective-javascript.html</guid>
+            
+            
+        </item>
+        
+        <item>
+            <title>roundchow</title>
+            <description>&lt;h3 id=&quot;roundchow&quot;&gt;roundchow&lt;/h3&gt;
+
+&lt;p&gt;如果你好奇谁是roundchow，以后你会知道的&lt;/p&gt;
+
+</description>
+            <pubDate>Fri, 05 Oct 2018 03:00:00 +0800</pubDate>
+            <link>http://localhost:4000#/2018/10/05/roundchow.html</link>
+            <guid isPermaLink="true">http://localhost:4000#/2018/10/05/roundchow.html</guid>
+            
+            
+        </item>
+        
+    </channel>
+</rss>
