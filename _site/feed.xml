@@ -6,8 +6,8 @@
         <link>http://localhost:4000/</link>
         <atom:link href="http://localhost:4000/feed.xml" rel="self"
         type="application/rss+xml"/>
-        <pubDate>Tue, 30 Oct 2018 14:57:57 +0800</pubDate>
-        <lastBuildDate>Tue, 30 Oct 2018 14:57:57 +0800</lastBuildDate>
+        <pubDate>Wed, 31 Oct 2018 17:51:14 +0800</pubDate>
+        <lastBuildDate>Wed, 31 Oct 2018 17:51:14 +0800</lastBuildDate>
         <generator>Jekyll v3.8.4</generator>
         
         <item>
@@ -86,6 +86,8 @@ if foo() then print(&quot;It will print &quot;OK&quot; if and only if the result
 
 &lt;h2 id=&quot;writing-a-parser&quot;&gt;Writing a parser&lt;/h2&gt;
 
+&lt;p&gt;In essence, a parser must transform a piece of code (which we inspect by looking at the characters) into an “abstract syntax tree” (AST). The AST is a structured in-memory representation of the program, and it’s “abstract” in the sense that it does not care exactly what characters is the source code made of, but it faithfully represents the semantics of it. 词法分析器，通过检查每一个字符，解决将代码转换成AST抽象语法树的任务。之所以称之为“抽象”，是因为AST并不关心源代码是由什么字符所组成的，它只是严格的呈现源代码的语义。&lt;/p&gt;
+
 &lt;p&gt;For example, for the following program text 举个例子，对于以下的程序文本:&lt;/p&gt;
 
 &lt;pre&gt;
@@ -95,7 +97,7 @@ sum = lambda(a, b) {
 print(sum(1, 2));
 &lt;/pre&gt;
 
-&lt;p&gt;The parser will generate the following AST, as a JavaScript object 词法分析器会产生如下的抽象语法树，形如一个JavaScript对象:&lt;/p&gt;
+&lt;p&gt;The parser will generate the following AST, as a JavaScript object: 词法分析器会产生如下的抽象语法树，形如一个JavaScript对象：&lt;/p&gt;
 
 &lt;pre&gt;
 {
@@ -135,11 +137,11 @@ print(sum(1, 2));
 }
 &lt;/pre&gt;
 
-&lt;p&gt;The main difficulty in writing a parser consists in a failure to properly organize the code. The parser should operate at a higher level than reading characters from a string. A few advices on how to keep complexity manageable:&lt;/p&gt;
+&lt;p&gt;The main difficulty in writing a parser consists in a failure to properly organize the code. The parser should operate at a higher level than reading characters from a string. A few advices on how to keep complexity manageable: 编写一个词法解析器解析器的主要困难在于未能恰当地组织代码。词法解析器的运作，应该高于从字符串中读取字符的层面。针对控制词法解析器编写的复杂度程度，以下给出三个建议：&lt;/p&gt;
 
-&lt;p&gt;· Write many functions and keep them small. In every function, do one thing and do it well. 多写函数并尽量保持单个函数的小，在每个函数中，一次做好一件事。&lt;/p&gt;
+&lt;p&gt;· Write many functions and keep them small. In every function, do one thing and do it well. 多写函数并尽量保持单个函数的精简，在每个函数中，一次做好一件事。&lt;/p&gt;
 
-&lt;p&gt;· Do not try to use regexps for parsing. They don’t work. Regexps can be helpful in the lexer though, but I suggest to limit them to very simple things. 不要在词法分析时使用正则表达式，此时正则不管用。 虽然正则有助于词法的分析，但建议在处理简单的事情时，克制对正则的使用。&lt;/p&gt;
+&lt;p&gt;· Do not try to use regexps for parsing. They don’t work. Regexps can be helpful in the lexer though, but I suggest to limit them to very simple things. 不要在词法分析时使用正则表达式，此时正则不管用。虽然正则有助于词法的分析，但建议在处理简单的事情时，克制对正则的使用。&lt;/p&gt;
 
 &lt;p&gt;· Don’t attempt to guess. When unsure how to parse something, throw an error and make sure the message contains the error location (line/column). 绝对不要胡乱瞎猜。如果词法分析时遇到了不确定的情况，可以抛出异常，并确保错误信息里包含了异常发生的代码行/列。&lt;/p&gt;
 
@@ -159,9 +161,9 @@ print(sum(1, 2));
 返回真，当且仅当流中没有更多值。&lt;/p&gt;
 
 &lt;p&gt;· croak(msg) — does throw new Error(msg). 
-抛出异常new Error(msg)。&lt;/p&gt;
+抛出异常new Error(msg)，便于追踪和定位发生异常的代码片段。&lt;/p&gt;
 
-&lt;p&gt;The full code of “InputStream” object:&lt;/p&gt;
+&lt;p&gt;The full code of “InputStream” object: 以下是实现“输入流”对象的完整代码：&lt;/p&gt;
 
 &lt;pre&gt;
 function InputStream(input) {

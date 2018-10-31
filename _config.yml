@@ -1,7 +1,7 @@
 # Site settings
 title: 圆周博客
-description: 在世界中心呼唤爱
+description: 圆周是和谐的闭环
 keywords: 周围, Blog, 创意, chow, tech, round, loi, wu
 author: Loi
 baseurl: "" # the subpath of your site, e.g. /blog/
-url: "" # the base hostname & protocol for your site
+url: "https://roundchow.github.io" # the base hostname & protocol for your site
