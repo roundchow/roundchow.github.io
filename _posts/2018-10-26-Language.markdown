@@ -209,11 +209,366 @@ function InputStream(input) {
 { type: "op", value: "!=" }            // operators
 </pre> 
 
+Whitespace and comments are skipped over, no tokens are returned. 空格和注释会被跳过，不返回分词。
+
+In order to write the tokenizer we need to look more closely into the syntax of our language. The idea is to notice that depending on the current character (as returned by input.peek()) we can decide what kind of token to read: 为了编写分词器，先对将要实现的编程语言的语法进行仔细的确认。通过input.peek()返回的当前字符，可以确定正在读取什么样的分词：
+
+· First off, skip over whitespace. 首先，略去空格。
+
+· If input.eof() then return null. 如果遇到input.eof()，则返回null（空）。
+
+· If it's a sharp sign (#), skip comment (retry after the end of line). 如果遇到#，略去注释。在最后一行之后进行重试。
+
+· If it's a quote then read a string. 如果遇到引号quote，就紧接着读取字符串string。
+
+· If it's a digit, then we proceed to read a number. 如果遇到数位digit，就进行数字的读取。
+
+· If it's a “letter”, then read an identifier or a keyword token. 如果遇到字母“letter”，就读取一个标识符或一个关键词分词。
+
+· If it's one of the punctuation characters, return a punctuation token. 如果遇到标点字符，就返回对应的标点分词。
+
+· If it's one of the operator characters, return an operator token. 如果遇到一个运算符字符，就返回对应的运算符分词。
+
+· If none of the above, error out with input.croak(). 如果遇到的是非上述的内容，就通过input.croak()抛出异常信息。
+
+So here's the “read_next” function — the “core” of the tokenizer — which implements the above: 以下是函数“read_next”，它是分词器的核心部分，是对上述规则的具体实现：
+
+<pre>
+function read_next() {
+    read_while(is_whitespace);
+    if (input.eof()) return null;
+    var ch = input.peek();
+    if (ch == "#") {
+        skip_comment();
+        return read_next();
+    }
+    if (ch == '"') return read_string();
+    if (is_digit(ch)) return read_number();
+    if (is_id_start(ch)) return read_ident();
+    if (is_punc(ch)) return {
+        type  : "punc",
+        value : input.next()
+    };
+    if (is_op_char(ch)) return {
+        type  : "op",
+        value : read_while(is_op_char)
+    };
+    input.croak("Can't handle character: " + ch);
+}
+</pre> 
+
+This is a “dispatcher” function and it's what next() will call in order to fetch the next token. Note it uses many utilities that are focused on particular token types, like read_string(), read_number() etc. There's no point to complicate the dispatcher with code from those functions, even if we never call them elsewhere. 这是一个“调度器（dispatcher）”函数，当next()被调用时触发，以获取下一个分词。注意到它使用了不少工具方法来判断特定的分词类型，比如read_string(), read_number()等。没必要在调度器dispatcher函数里实现这些方法，从而增加代码的复杂度。
+
+The code pretty much speaks for itself now, so here is the complete tokenizer for our language. 代码自己会说话，以下是这个新的编程语言完整的分词器的实现：
+
+<pre>
+function TokenStream(input) {
+    var current = null;
+    var keywords = " if then else lambda λ true false ";
+    return {
+        next  : next,
+        peek  : peek,
+        eof   : eof,
+        croak : input.croak
+    };
+    function is_keyword(x) {
+        return keywords.indexOf(" " + x + " ") >= 0;
+    }
+    function is_digit(ch) {
+        return /[0-9]/i.test(ch);
+    }
+    function is_id_start(ch) {
+        return /[a-zλ_]/i.test(ch);
+    }
+    function is_id(ch) {
+        return is_id_start(ch) || "?!-<>=0123456789".indexOf(ch) >= 0;
+    }
+    function is_op_char(ch) {
+        return "+-*/%=&|<>!".indexOf(ch) >= 0;
+    }
+    function is_punc(ch) {
+        return ",;(){}[]".indexOf(ch) >= 0;
+    }
+    function is_whitespace(ch) {
+        return " \t\n".indexOf(ch) >= 0;
+    }
+    function read_while(predicate) {
+        var str = "";
+        while (!input.eof() && predicate(input.peek()))
+            str += input.next();
+        return str;
+    }
+    function read_number() {
+        var has_dot = false;
+        var number = read_while(function(ch){
+            if (ch == ".") {
+                if (has_dot) return false;
+                has_dot = true;
+                return true;
+            }
+            return is_digit(ch);
+        });
+        return { type: "num", value: parseFloat(number) };
+    }
+    function read_ident() {
+        var id = read_while(is_id);
+        return {
+            type  : is_keyword(id) ? "kw" : "var",
+            value : id
+        };
+    }
+    function read_escaped(end) {
+        var escaped = false, str = "";
+        input.next();
+        while (!input.eof()) {
+            var ch = input.next();
+            if (escaped) {
+                str += ch;
+                escaped = false;
+            } else if (ch == "\\") {
+                escaped = true;
+            } else if (ch == end) {
+                break;
+            } else {
+                str += ch;
+            }
+        }
+        return str;
+    }
+    function read_string() {
+        return { type: "str", value: read_escaped('"') };
+    }
+    function skip_comment() {
+        read_while(function(ch){ return ch != "\n" });
+        input.next();
+    }
+    function read_next() {
+        read_while(is_whitespace);
+        if (input.eof()) return null;
+        var ch = input.peek();
+        if (ch == "#") {
+            skip_comment();
+            return read_next();
+        }
+        if (ch == '"') return read_string();
+        if (is_digit(ch)) return read_number();
+        if (is_id_start(ch)) return read_ident();
+        if (is_punc(ch)) return {
+            type  : "punc",
+            value : input.next()
+        };
+        if (is_op_char(ch)) return {
+            type  : "op",
+            value : read_while(is_op_char)
+        };
+        input.croak("Can't handle character: " + ch);
+    }
+    function peek() {
+        return current || (current = read_next());
+    }
+    function next() {
+        var tok = current;
+        current = null;
+        return tok || read_next();
+    }
+    function eof() {
+        return peek() == null;
+    }
+}
+</pre>
+
+· The next() function doesn't always call read_next(), because it might have been peeked before (in which case read_next() was already called and the stream advanced). Therefore we need a current variable which keeps track of the current token. 函数next()不会每次都调用到read_next()。通过专门的current变量来追踪当前处理的分词。
+
+· We only support decimal numbers with the usual notation (no 1E5 stuff, no hex, no octal). But if we ever need more, the changes go only in read_number() and are pretty easy to do. 该编程语言只支持常见十进制数，如果需要支持更多的符号，可以通过完善函数read_number()来实现。
+
+· Unlike JavaScript, the only characters that cannot appear unquoted in a string are the quote character itself and the backslash. You need to backslash them. Otherwise strings can contain hard newlines, tabs, and whatnot. We don't interpret the usual escapes like \n, \t etc. though again, the changes would be pretty trivial (in “read_string”). 
+
+### The AST
+
+As mentioned, the parser will build a structure which faithfully represents the semantics of the program. An AST node is a plain JavaScript object that has a type property specifying what kind of node it is, and additional information, depending on the particular type. 词法分析器parser，可以为程序创建一种严格表达语义的结构。一个AST抽象语法树节点是纯JavaScript对象，它拥有一个类型属性以表明节点的类型，并根据不同的节点类型，附加更多的信息。
+
+<pre>
+In short:
+
+    · num { type: "num", value: NUMBER }
+    · str { type: "str", value: STRING }
+    · bool { type: "bool", value: true or false }
+    · var { type: "var", value: NAME }
+    · lambda { type: "lambda", vars: [ NAME... ], body: AST }
+    · call { type: "call", func: AST, args: [ AST... ] }
+    · if { type: "if", cond: AST, then: AST, else: AST }
+    · assign { type: "assign", operator: "=", left: AST, right: AST }
+    · binary { type: "binary", operator: OPERATOR, left: AST, right: AST }
+    · prog { type: "prog", prog: [ AST... ] }
+    · let { type: "let", vars: [ VARS... ], body: AST }
+
+</pre>
+
+<pre>
+Examples:
+
+Numbers ("num")
+123.5 
+->
+{ type: "num", value: 123.5 }
+
+Strings ("str")
+"Hello World!"
+->
+{ type: "str", value: "Hello World!" }
+
+Booleans ("bool")
+true
+->
+{ type: "bool", value: true }
+false
+->
+{ type: "bool", value: false }
+
+Identifiers ("var")
+foo
+->
+{ type: "var", value: "foo" }
+
+Functions ("lambda")
+lambda (x) 10   
+# or 
+λ (x) 10 
+-> 
+{
+  type: "lambda",
+  vars: [ "x" ],
+  body: { type: "num", value: 10 }
+}
+
+Function calls ("call")
+foo(a, 1) 
+->
+{
+  "type": "call",
+  "func": { "type": "var", "value": "foo" },
+  "args": [
+    { "type": "var", "value": "a" },
+    { "type": "num", "value": 1 }
+  ]
+}
+
+Conditionals ("if") 
+if foo then bar else baz 
+->
+{
+  "type": "if",
+  "cond": { "type": "var", "value": "foo" },
+  "then": { "type": "var", "value": "bar" },
+  "else": { "type": "var", "value": "baz" }
+}
+
+The else branch is optional:
+if foo then bar 
+->
+{
+  "type": "if",
+  "cond": { "type": "var", "value": "foo" },
+  "then": { "type": "var", "value": "bar" }
+}
+
+Assignment ("assign")
+a = 10 
+->
+{
+  "type": "assign",
+  "operator": "=",
+  "left": { "type": "var", "value": "a" },
+  "right": { "type": "num", "value": 10 }
+}
+
+Binary expressions ("binary")
+x + y * z 
+->
+{
+  "type": "binary",
+  "operator": "+",
+  "left": { "type": "var", "value": "x" },
+  "right": {
+    "type": "binary",
+    "operator": "*",
+    "left": { "type": "var", "value": "y" },
+    "right": { "type": "var", "value": "z" }
+  }
+}
+
+Sequences ("prog")
+{
+  a = 5;
+  b = a * 2;
+  a + b;
+}
+->
+{
+  "type": "prog",
+  "prog": [
+    {
+      "type": "assign",
+      "operator": "=",
+      "left": { "type": "var", "value": "a" },
+      "right": { "type": "num", "value": 5 }
+    },
+    {
+      "type": "assign",
+      "operator": "=",
+      "left": { "type": "var", "value": "b" },
+      "right": {
+        "type": "binary",
+        "operator": "*",
+        "left": { "type": "var", "value": "a" },
+        "right": { "type": "num", "value": 2 }
+      }
+    },
+    {
+      "type": "binary",
+      "operator": "+",
+      "left": { "type": "var", "value": "a" },
+      "right": { "type": "var", "value": "b" }
+    }
+  ]
+}
+
+Block scoped variables ("let")
+let (a = 10, b = a * 10) {
+  a + b;
+}
+->
+{
+  "type": "let",
+  "vars": [
+    {
+      "name": "a",
+      "def": { "type": "num", "value": 10 }
+    },
+    {
+      "name": "b",
+      "def": {
+        "type": "binary",
+        "operator": "*",
+        "left": { "type": "var", "value": "a" },
+        "right": { "type": "num", "value": 10 }
+      }
+    }
+  ],
+  "body": {
+    "type": "binary",
+    "operator": "+",
+    "left": { "type": "var", "value": "a" },
+    "right": { "type": "var", "value": "b" }
+  }
+}
+
+
+</pre>
+
 · 以下未完待续
 
 <pre>
-
-### The AST
 
 ### The parser
 
