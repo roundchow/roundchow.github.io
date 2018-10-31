@@ -6,13 +6,15 @@
         <link>http://localhost:4000/</link>
         <atom:link href="http://localhost:4000/feed.xml" rel="self"
         type="application/rss+xml"/>
-        <pubDate>Wed, 31 Oct 2018 17:51:14 +0800</pubDate>
-        <lastBuildDate>Wed, 31 Oct 2018 17:51:14 +0800</lastBuildDate>
+        <pubDate>Wed, 31 Oct 2018 18:29:06 +0800</pubDate>
+        <lastBuildDate>Wed, 31 Oct 2018 18:29:06 +0800</lastBuildDate>
         <generator>Jekyll v3.8.4</generator>
         
         <item>
             <title>λanguage - 如何实现一门编程语言</title>
-            <description>&lt;p&gt;How to implement a programming language in JavaScript 如何用JavaScript实现一门编程语言&lt;/p&gt;
+            <description>&lt;p&gt;How to implement a programming language in JavaScript&lt;/p&gt;
+
+&lt;p&gt;如何用JavaScript实现一门编程语言&lt;/p&gt;
 
 &lt;h2 id=&quot;introduction&quot;&gt;Introduction&lt;/h2&gt;
 
@@ -28,7 +30,8 @@
 
 &lt;p&gt;· Optimization techniques 优化技术&lt;/p&gt;
 
-&lt;p&gt;· Examples of what λanguage brings new over plain JavaScript λanguage基于JavaScript之上的新特性示例&lt;/p&gt;
+&lt;p&gt;· Examples of what λanguage brings new over plain JavaScript 
+λanguage基于JavaScript之上的新特性示例&lt;/p&gt;
 
 &lt;h2 id=&quot;λanguage-description&quot;&gt;λanguage description&lt;/h2&gt;
 
@@ -193,53 +196,72 @@ function InputStream(input) {
 
 &lt;h3 id=&quot;token-stream---the-token-input-stream-分词输入流&quot;&gt;Token stream - The token input stream 分词输入流&lt;/h3&gt;
 
-&lt;h3 id=&quot;the-ast&quot;&gt;The AST&lt;/h3&gt;
+&lt;p&gt;The tokenizer (also called “lexer”) operates on a character input stream and returns a stream object with the same interface, but the values returned by peek() / next() will be tokens. A token is an object with two properties: type and value. 分词器（或称“词法分析器”）对字符输入流进行操作，并通过相同接口返回对象流。不过对于peek() / next()的处理，仍然返回分词。分词是一种具有type和value两个属性的对象。&lt;/p&gt;
 
-&lt;h3 id=&quot;the-parser&quot;&gt;The parser&lt;/h3&gt;
+&lt;p&gt;Here are some examples with supported tokens: 以下示例给出一些支持的分词形式：&lt;/p&gt;
 
-&lt;h2 id=&quot;simple-interpreter&quot;&gt;Simple interpreter&lt;/h2&gt;
+&lt;pre&gt;
+{ type: &quot;punc&quot;, value: &quot;(&quot; }           // punctuation: parens, comma, semicolon etc.
+{ type: &quot;num&quot;, value: 5 }              // numbers
+{ type: &quot;str&quot;, value: &quot;Hello World!&quot; } // strings
+{ type: &quot;kw&quot;, value: &quot;lambda&quot; }        // keywords
+{ type: &quot;var&quot;, value: &quot;a&quot; }            // identifiers
+{ type: &quot;op&quot;, value: &quot;!=&quot; }            // operators
+&lt;/pre&gt;
 
-&lt;h3 id=&quot;test-what-we-have&quot;&gt;Test what we have&lt;/h3&gt;
+&lt;p&gt;· 以下未完待续&lt;/p&gt;
 
-&lt;h3 id=&quot;adding-new-constructs&quot;&gt;Adding new constructs&lt;/h3&gt;
+&lt;pre&gt;
 
-&lt;h3 id=&quot;how-fast-are-we&quot;&gt;How fast are we?&lt;/h3&gt;
+### The AST
 
-&lt;h2 id=&quot;cps-evaluator&quot;&gt;CPS Evaluator&lt;/h2&gt;
+### The parser
 
-&lt;h3 id=&quot;guarding-the-stack&quot;&gt;Guarding the stack&lt;/h3&gt;
+## Simple interpreter
 
-&lt;h3 id=&quot;continuations&quot;&gt;Continuations&lt;/h3&gt;
+### Test what we have
 
-&lt;h4 id=&quot;yield-advanced&quot;&gt;Yield (advanced)&lt;/h4&gt;
+### Adding new constructs
 
-&lt;h2 id=&quot;compiling-to-js&quot;&gt;Compiling to JS&lt;/h2&gt;
+### How fast are we?
 
-&lt;h3 id=&quot;js-code-generator&quot;&gt;JS code generator&lt;/h3&gt;
+## CPS Evaluator
 
-&lt;h3 id=&quot;cps-transformer&quot;&gt;CPS transformer&lt;/h3&gt;
+### Guarding the stack
 
-&lt;h4 id=&quot;samples&quot;&gt;Samples&lt;/h4&gt;
+### Continuations
 
-&lt;h4 id=&quot;improvements&quot;&gt;Improvements&lt;/h4&gt;
+#### Yield (advanced)
 
-&lt;h3 id=&quot;optimizer&quot;&gt;Optimizer&lt;/h3&gt;
+## Compiling to JS
 
-&lt;h2 id=&quot;wrapping-up&quot;&gt;Wrapping up&lt;/h2&gt;
+### JS code generator
 
-&lt;h2 id=&quot;real-samples&quot;&gt;Real samples&lt;/h2&gt;
+### CPS transformer
 
-&lt;h3 id=&quot;primitives&quot;&gt;Primitives&lt;/h3&gt;
+#### Samples
 
-&lt;h3 id=&quot;catdir&quot;&gt;catDir&lt;/h3&gt;
+#### Improvements
 
-&lt;h3 id=&quot;copytree-sequential&quot;&gt;copyTree sequential&lt;/h3&gt;
+### Optimizer
 
-&lt;h3 id=&quot;copytree-parallel&quot;&gt;copyTree parallel&lt;/h3&gt;
+## Wrapping up
 
-&lt;h3 id=&quot;in-fairness-to-node&quot;&gt;In fairness to Node&lt;/h3&gt;
+## Real samples
 
-&lt;h3 id=&quot;error-handling&quot;&gt;Error handling&lt;/h3&gt;
+### Primitives
+
+### catDir
+
+### copyTree sequential
+
+### copyTree parallel
+
+### In fairness to Node
+
+### Error handling
+
+&lt;/pre&gt;
 
 &lt;p&gt;· How to implement a programming language in JavaScript - Loi Wu -&lt;/p&gt;
 

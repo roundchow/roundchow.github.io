@@ -7,7 +7,9 @@ image: "img/f.jpg"
 date:   2018-10-26 03:00:00
 ---
 
-How to implement a programming language in JavaScript 如何用JavaScript实现一门编程语言 
+How to implement a programming language in JavaScript 
+
+如何用JavaScript实现一门编程语言 
 
 ## Introduction
 
@@ -23,7 +25,8 @@ How to implement a programming language in JavaScript 如何用JavaScript实现�
 
 · Optimization techniques 优化技术
 
-· Examples of what λanguage brings new over plain JavaScript λanguage基于JavaScript之上的新特性示例
+· Examples of what λanguage brings new over plain JavaScript 
+λanguage基于JavaScript之上的新特性示例
 
 ## λanguage description
 
@@ -193,7 +196,22 @@ function InputStream(input) {
 
 ### Token stream - The token input stream 分词输入流
 
+ The tokenizer (also called “lexer”) operates on a character input stream and returns a stream object with the same interface, but the values returned by peek() / next() will be tokens. A token is an object with two properties: type and value. 分词器（或称“词法分析器”）对字符输入流进行操作，并通过相同接口返回对象流。不过对于peek() / next()的处理，仍然返回分词。分词是一种具有type和value两个属性的对象。
 
+ Here are some examples with supported tokens: 以下示例给出一些支持的分词形式：
+
+<pre>
+{ type: "punc", value: "(" }           // punctuation: parens, comma, semicolon etc.
+{ type: "num", value: 5 }              // numbers
+{ type: "str", value: "Hello World!" } // strings
+{ type: "kw", value: "lambda" }        // keywords
+{ type: "var", value: "a" }            // identifiers
+{ type: "op", value: "!=" }            // operators
+</pre> 
+
+· 以下未完待续
+
+<pre>
 
 ### The AST
 
@@ -243,7 +261,7 @@ function InputStream(input) {
 
 ### Error handling
 
-
+</pre> 
 
 · How to implement a programming language in JavaScript - Loi Wu -
 

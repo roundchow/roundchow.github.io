@@ -1,4 +1,6 @@
-<p>How to implement a programming language in JavaScript 如何用JavaScript实现一门编程语言</p>
+<p>How to implement a programming language in JavaScript</p>
+
+<p>如何用JavaScript实现一门编程语言</p>
 
 <h2 id="introduction">Introduction</h2>
 
@@ -14,7 +16,8 @@
 
 <p>· Optimization techniques 优化技术</p>
 
-<p>· Examples of what λanguage brings new over plain JavaScript λanguage基于JavaScript之上的新特性示例</p>
+<p>· Examples of what λanguage brings new over plain JavaScript 
+λanguage基于JavaScript之上的新特性示例</p>
 
 <h2 id="λanguage-description">λanguage description</h2>
 
@@ -179,53 +182,72 @@ function InputStream(input) {
 
 <h3 id="token-stream---the-token-input-stream-分词输入流">Token stream - The token input stream 分词输入流</h3>
 
-<h3 id="the-ast">The AST</h3>
+<p>The tokenizer (also called “lexer”) operates on a character input stream and returns a stream object with the same interface, but the values returned by peek() / next() will be tokens. A token is an object with two properties: type and value. 分词器（或称“词法分析器”）对字符输入流进行操作，并通过相同接口返回对象流。不过对于peek() / next()的处理，仍然返回分词。分词是一种具有type和value两个属性的对象。</p>
 
-<h3 id="the-parser">The parser</h3>
+<p>Here are some examples with supported tokens: 以下示例给出一些支持的分词形式：</p>
 
-<h2 id="simple-interpreter">Simple interpreter</h2>
+<pre>
+{ type: "punc", value: "(" }           // punctuation: parens, comma, semicolon etc.
+{ type: "num", value: 5 }              // numbers
+{ type: "str", value: "Hello World!" } // strings
+{ type: "kw", value: "lambda" }        // keywords
+{ type: "var", value: "a" }            // identifiers
+{ type: "op", value: "!=" }            // operators
+</pre>
 
-<h3 id="test-what-we-have">Test what we have</h3>
+<p>· 以下未完待续</p>
 
-<h3 id="adding-new-constructs">Adding new constructs</h3>
+<pre>
 
-<h3 id="how-fast-are-we">How fast are we?</h3>
+### The AST
 
-<h2 id="cps-evaluator">CPS Evaluator</h2>
+### The parser
 
-<h3 id="guarding-the-stack">Guarding the stack</h3>
+## Simple interpreter
 
-<h3 id="continuations">Continuations</h3>
+### Test what we have
 
-<h4 id="yield-advanced">Yield (advanced)</h4>
+### Adding new constructs
 
-<h2 id="compiling-to-js">Compiling to JS</h2>
+### How fast are we?
 
-<h3 id="js-code-generator">JS code generator</h3>
+## CPS Evaluator
 
-<h3 id="cps-transformer">CPS transformer</h3>
+### Guarding the stack
 
-<h4 id="samples">Samples</h4>
+### Continuations
 
-<h4 id="improvements">Improvements</h4>
+#### Yield (advanced)
 
-<h3 id="optimizer">Optimizer</h3>
+## Compiling to JS
 
-<h2 id="wrapping-up">Wrapping up</h2>
+### JS code generator
 
-<h2 id="real-samples">Real samples</h2>
+### CPS transformer
 
-<h3 id="primitives">Primitives</h3>
+#### Samples
 
-<h3 id="catdir">catDir</h3>
+#### Improvements
 
-<h3 id="copytree-sequential">copyTree sequential</h3>
+### Optimizer
 
-<h3 id="copytree-parallel">copyTree parallel</h3>
+## Wrapping up
 
-<h3 id="in-fairness-to-node">In fairness to Node</h3>
+## Real samples
 
-<h3 id="error-handling">Error handling</h3>
+### Primitives
+
+### catDir
+
+### copyTree sequential
+
+### copyTree parallel
+
+### In fairness to Node
+
+### Error handling
+
+</pre>
 
 <p>· How to implement a programming language in JavaScript - Loi Wu -</p>
 
