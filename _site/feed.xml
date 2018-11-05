@@ -6,8 +6,8 @@
         <link>http://localhost:4000/</link>
         <atom:link href="http://localhost:4000/feed.xml" rel="self"
         type="application/rss+xml"/>
-        <pubDate>Wed, 31 Oct 2018 22:23:04 +0800</pubDate>
-        <lastBuildDate>Wed, 31 Oct 2018 22:23:04 +0800</lastBuildDate>
+        <pubDate>Mon, 05 Nov 2018 17:46:48 +0800</pubDate>
+        <lastBuildDate>Mon, 05 Nov 2018 17:46:48 +0800</lastBuildDate>
         <generator>Jekyll v3.8.4</generator>
         
         <item>
@@ -563,14 +563,341 @@ let (a = 10, b = a * 10) {
   }
 }
 
+&lt;/pre&gt;
 
+&lt;h3 id=&quot;the-parser&quot;&gt;The parser&lt;/h3&gt;
+
+&lt;p&gt;The parser creates AST nodes that are described in the AST section. 词法分析器生成AST抽象语法树描述中对应的AST节点。&lt;/p&gt;
+
+&lt;p&gt;Thanks to the work we did in the tokenizer, the parser operates on a stream of tokens instead of dealing with individual characters. It still defines many helpers to keep complexity down. I’ll discuss here the main functions that comprise the parser. Let’s start with a high level one, the lambda parser: 在分词器运作的基础上，词法分析器并不是处理独立的字符，而是处理分词流。通过定义丰富的工具方法，可以降低代码的复杂程度。首先，从构成词法分析器的主函数开始进行讨论，以下是lambda分析器：&lt;/p&gt;
+
+&lt;pre&gt;
+function parse_lambda() {
+    return {
+        type: &quot;lambda&quot;,
+        vars: delimited(&quot;(&quot;, &quot;)&quot;, &quot;,&quot;, parse_varname),
+        body: parse_expression()
+    };
+}
+&lt;/pre&gt;
+
+&lt;p&gt;This function will be invoked when the lambda keyword has already been seen and “eaten” from the input, so all it cares for is to parse the argument names; but they’re in parentheses and delimited by commas. Rather than placing that code in parse_lambda, I preferred to write a delimited function that takes these arguments: the start token, the end token, the separator, and a function which parses whatever must be between those start/end tokens. In this case, it’s parse_varname, which takes care to throw an error if it encounters anything which doesn’t look like a variable. The body of the function is an expression, so we get it with parse_expression. 当关键词lambda出现并进入输入流时，函数parse_lambda将被调用，所以此时只关心参数名称的解析。这些参数被圆括号括起，并用逗号隔开。&lt;/p&gt;
+
+&lt;p&gt;delimited is a bit lower-level:&lt;/p&gt;
+
+&lt;pre&gt;
+function delimited(start, stop, separator, parser) {
+    var a = [], first = true;
+    skip_punc(start);
+    while (!input.eof()) {
+        if (is_punc(stop)) break;
+        if (first) first = false; else skip_punc(separator);
+        if (is_punc(stop)) break; // the last separator can be missing
+        a.push(parser());
+    }
+    skip_punc(stop);
+    return a;
+}
+&lt;/pre&gt;
+
+&lt;p&gt;The function that parses the whole program is probably the simplest:&lt;/p&gt;
+
+&lt;pre&gt;
+function parse_toplevel() {
+    var prog = [];
+    while (!input.eof()) {
+        prog.push(parse_expression());
+        if (!input.eof()) skip_punc(&quot;;&quot;);
+    }
+    return { type: &quot;prog&quot;, prog: prog };
+}
+&lt;/pre&gt;
+
+&lt;p&gt;Another simple example: parse_if():&lt;/p&gt;
+
+&lt;pre&gt;
+function parse_if() {
+    skip_kw(&quot;if&quot;);
+    var cond = parse_expression();
+    if (!is_punc(&quot;{&quot;)) skip_kw(&quot;then&quot;);
+    var then = parse_expression();
+    var ret = { type: &quot;if&quot;, cond: cond, then: then };
+    if (is_kw(&quot;else&quot;)) {
+        input.next();
+        ret.else = parse_expression();
+    }
+    return ret;
+}
+&lt;/pre&gt;
+
+&lt;p&gt;parse_atom() does the main dispatching job, depending on the current token:&lt;/p&gt;
+
+&lt;pre&gt;
+function parse_atom() {
+    return maybe_call(function(){
+        if (is_punc(&quot;(&quot;)) {
+            input.next();
+            var exp = parse_expression();
+            skip_punc(&quot;)&quot;);
+            return exp;
+        }
+        if (is_punc(&quot;{&quot;)) return parse_prog();
+        if (is_kw(&quot;if&quot;)) return parse_if();
+        if (is_kw(&quot;true&quot;) || is_kw(&quot;false&quot;)) return parse_bool();
+        if (is_kw(&quot;lambda&quot;) || is_kw(&quot;λ&quot;)) {
+            input.next();
+            return parse_lambda();
+        }
+        var tok = input.next();
+        if (tok.type == &quot;var&quot; || tok.type == &quot;num&quot; || tok.type == &quot;str&quot;)
+            return tok;
+        unexpected();
+    });
+}
+&lt;/pre&gt;
+
+&lt;pre&gt;
+// we're going to use the FALSE node in various places,
+// so I'm making it a global.
+var FALSE = { type: &quot;bool&quot;, value: false };
+
+function parse_prog() {
+    var prog = delimited(&quot;{&quot;, &quot;}&quot;, &quot;;&quot;, parse_expression);
+    if (prog.length == 0) return FALSE;
+    if (prog.length == 1) return prog[0];
+    return { type: &quot;prog&quot;, prog: prog };
+}
+&lt;/pre&gt;
+
+&lt;p&gt;Here’s the parse_expression() function. Contrary to parse_atom(), this one will extend an expression as much as possible to the right using maybe_binary(), which is explained below:&lt;/p&gt;
+
+&lt;pre&gt;
+function parse_expression() {
+    return maybe_call(function(){
+        return maybe_binary(parse_atom(), 0);
+    });
+}
+&lt;/pre&gt;
+
+&lt;h4 id=&quot;the-maybe_-functions&quot;&gt;The maybe_* functions&lt;/h4&gt;
+
+&lt;p&gt;These functions check what follows after an expression in order to decide whether to wrap that expression in another node, or just return it as is.&lt;/p&gt;
+
+&lt;p&gt;maybe_call() is very simple. It receives a function that is expected to parse the current expression. If after that expression it sees a ( punctuation token, then it must be a “call” node, which is what parse_call() makes (included below). Notice again how delimited() comes in handy for reading the argument list.&lt;/p&gt;
+
+&lt;pre&gt;
+function maybe_call(expr) {
+    expr = expr();
+    return is_punc(&quot;(&quot;) ? parse_call(expr) : expr;
+}
+
+function parse_call(func) {
+    return {
+        type: &quot;call&quot;,
+        func: func,
+        args: delimited(&quot;(&quot;, &quot;)&quot;, &quot;,&quot;, parse_expression)
+    };
+}
+&lt;/pre&gt;
+
+&lt;p&gt;Operator precedence&lt;/p&gt;
+
+&lt;p&gt;maybe_binary(left, my_prec) is used to compose binary expressions like 1 + 2 * 3. The trick to parse them properly is to correctly define the operator precedence, so we’ll start with that:&lt;/p&gt;
+
+&lt;pre&gt;
+var PRECEDENCE = {
+    &quot;=&quot;: 1,
+    &quot;||&quot;: 2,
+    &quot;&amp;amp;&amp;amp;&quot;: 3,
+    &quot;&amp;lt;&quot;: 7, &quot;&amp;gt;&quot;: 7, &quot;&amp;lt;=&quot;: 7, &quot;&amp;gt;=&quot;: 7, &quot;==&quot;: 7, &quot;!=&quot;: 7,
+    &quot;+&quot;: 10, &quot;-&quot;: 10,
+    &quot;*&quot;: 20, &quot;/&quot;: 20, &quot;%&quot;: 20,
+};
+&lt;/pre&gt;
+
+&lt;p&gt;If it’s an operator that has a higher precedence than ours, then it wraps left in a new “binary” node, and for the right side it repeats the trick at the new precedence level (*):&lt;/p&gt;
+
+&lt;pre&gt;
+function maybe_binary(left, my_prec) {
+    var tok = is_op();
+    if (tok) {
+        var his_prec = PRECEDENCE[tok.value];
+        if (his_prec &amp;gt; my_prec) {
+            input.next();
+            var right = maybe_binary(parse_atom(), his_prec) // (*);
+            var binary = {
+                type     : tok.value == &quot;=&quot; ? &quot;assign&quot; : &quot;binary&quot;,
+                operator : tok.value,
+                left     : left,
+                right    : right
+            };
+            return maybe_binary(binary, my_prec);
+        }
+    }
+    return left;
+}
+&lt;/pre&gt;
+
+&lt;p&gt;the whole parse function:&lt;/p&gt;
+
+&lt;pre&gt;
+var FALSE = { type: &quot;bool&quot;, value: false };
+function parse(input) {
+    var PRECEDENCE = {
+        &quot;=&quot;: 1,
+        &quot;||&quot;: 2,
+        &quot;&amp;amp;&amp;amp;&quot;: 3,
+        &quot;&amp;lt;&quot;: 7, &quot;&amp;gt;&quot;: 7, &quot;&amp;lt;=&quot;: 7, &quot;&amp;gt;=&quot;: 7, &quot;==&quot;: 7, &quot;!=&quot;: 7,
+        &quot;+&quot;: 10, &quot;-&quot;: 10,
+        &quot;*&quot;: 20, &quot;/&quot;: 20, &quot;%&quot;: 20,
+    };
+    return parse_toplevel();
+    function is_punc(ch) {
+        var tok = input.peek();
+        return tok &amp;amp;&amp;amp; tok.type == &quot;punc&quot; &amp;amp;&amp;amp; (!ch || tok.value == ch) &amp;amp;&amp;amp; tok;
+    }
+    function is_kw(kw) {
+        var tok = input.peek();
+        return tok &amp;amp;&amp;amp; tok.type == &quot;kw&quot; &amp;amp;&amp;amp; (!kw || tok.value == kw) &amp;amp;&amp;amp; tok;
+    }
+    function is_op(op) {
+        var tok = input.peek();
+        return tok &amp;amp;&amp;amp; tok.type == &quot;op&quot; &amp;amp;&amp;amp; (!op || tok.value == op) &amp;amp;&amp;amp; tok;
+    }
+    function skip_punc(ch) {
+        if (is_punc(ch)) input.next();
+        else input.croak(&quot;Expecting punctuation: \&quot;&quot; + ch + &quot;\&quot;&quot;);
+    }
+    function skip_kw(kw) {
+        if (is_kw(kw)) input.next();
+        else input.croak(&quot;Expecting keyword: \&quot;&quot; + kw + &quot;\&quot;&quot;);
+    }
+    function skip_op(op) {
+        if (is_op(op)) input.next();
+        else input.croak(&quot;Expecting operator: \&quot;&quot; + op + &quot;\&quot;&quot;);
+    }
+    function unexpected() {
+        input.croak(&quot;Unexpected token: &quot; + JSON.stringify(input.peek()));
+    }
+    function maybe_binary(left, my_prec) {
+        var tok = is_op();
+        if (tok) {
+            var his_prec = PRECEDENCE[tok.value];
+            if (his_prec &amp;gt; my_prec) {
+                input.next();
+                return maybe_binary({
+                    type     : tok.value == &quot;=&quot; ? &quot;assign&quot; : &quot;binary&quot;,
+                    operator : tok.value,
+                    left     : left,
+                    right    : maybe_binary(parse_atom(), his_prec)
+                }, my_prec);
+            }
+        }
+        return left;
+    }
+    function delimited(start, stop, separator, parser) {
+        var a = [], first = true;
+        skip_punc(start);
+        while (!input.eof()) {
+            if (is_punc(stop)) break;
+            if (first) first = false; else skip_punc(separator);
+            if (is_punc(stop)) break;
+            a.push(parser());
+        }
+        skip_punc(stop);
+        return a;
+    }
+    function parse_call(func) {
+        return {
+            type: &quot;call&quot;,
+            func: func,
+            args: delimited(&quot;(&quot;, &quot;)&quot;, &quot;,&quot;, parse_expression),
+        };
+    }
+    function parse_varname() {
+        var name = input.next();
+        if (name.type != &quot;var&quot;) input.croak(&quot;Expecting variable name&quot;);
+        return name.value;
+    }
+    function parse_if() {
+        skip_kw(&quot;if&quot;);
+        var cond = parse_expression();
+        if (!is_punc(&quot;{&quot;)) skip_kw(&quot;then&quot;);
+        var then = parse_expression();
+        var ret = {
+            type: &quot;if&quot;,
+            cond: cond,
+            then: then,
+        };
+        if (is_kw(&quot;else&quot;)) {
+            input.next();
+            ret.else = parse_expression();
+        }
+        return ret;
+    }
+    function parse_lambda() {
+        return {
+            type: &quot;lambda&quot;,
+            vars: delimited(&quot;(&quot;, &quot;)&quot;, &quot;,&quot;, parse_varname),
+            body: parse_expression()
+        };
+    }
+    function parse_bool() {
+        return {
+            type  : &quot;bool&quot;,
+            value : input.next().value == &quot;true&quot;
+        };
+    }
+    function maybe_call(expr) {
+        expr = expr();
+        return is_punc(&quot;(&quot;) ? parse_call(expr) : expr;
+    }
+    function parse_atom() {
+        return maybe_call(function(){
+            if (is_punc(&quot;(&quot;)) {
+                input.next();
+                var exp = parse_expression();
+                skip_punc(&quot;)&quot;);
+                return exp;
+            }
+            if (is_punc(&quot;{&quot;)) return parse_prog();
+            if (is_kw(&quot;if&quot;)) return parse_if();
+            if (is_kw(&quot;true&quot;) || is_kw(&quot;false&quot;)) return parse_bool();
+            if (is_kw(&quot;lambda&quot;) || is_kw(&quot;λ&quot;)) {
+                input.next();
+                return parse_lambda();
+            }
+            var tok = input.next();
+            if (tok.type == &quot;var&quot; || tok.type == &quot;num&quot; || tok.type == &quot;str&quot;)
+                return tok;
+            unexpected();
+        });
+    }
+    function parse_toplevel() {
+        var prog = [];
+        while (!input.eof()) {
+            prog.push(parse_expression());
+            if (!input.eof()) skip_punc(&quot;;&quot;);
+        }
+        return { type: &quot;prog&quot;, prog: prog };
+    }
+    function parse_prog() {
+        var prog = delimited(&quot;{&quot;, &quot;}&quot;, &quot;;&quot;, parse_expression);
+        if (prog.length == 0) return FALSE;
+        if (prog.length == 1) return prog[0];
+        return { type: &quot;prog&quot;, prog: prog };
+    }
+    function parse_expression() {
+        return maybe_call(function(){
+            return maybe_binary(parse_atom(), 0);
+        });
+    }
+}
 &lt;/pre&gt;
 
 &lt;p&gt;· 以下未完待续&lt;/p&gt;
 
 &lt;pre&gt;
-
-### The parser
 
 ## Simple interpreter
 
