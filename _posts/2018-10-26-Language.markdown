@@ -895,6 +895,14 @@ function parse(input) {
 }
 </pre>
 
+## Simple interpreter
+
+We wrote 3 functions: InputStream, TokenStream and parse. To get an AST from a piece of code now we can do the following: 我们已经实现3个功能InputStream，TokenStream和parse。为了从代码块中解析出AST抽象语法树，可以进行如下的代码操作：
+
+<pre>
+var ast = parse(TokenStream(InputStream(code)));
+</pre>
+
 
 
 
@@ -904,8 +912,6 @@ function parse(input) {
 · 以下未完待续
 
 <pre>
-
-## Simple interpreter
 
 ### Test what we have
 
