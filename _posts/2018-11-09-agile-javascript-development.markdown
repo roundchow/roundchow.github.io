@@ -9,7 +9,7 @@ date:   2018-11-09 03:00:00
 
 JavaScript快速全栈开发
 
-## Key Points
+## Knowledge Framework
 
 <pre>
 
@@ -59,6 +59,8 @@ Express.js
 Derby
 
 </pre>
+
+## Key Points
 
 · [JSON](https://www.json.org/)
 
@@ -175,7 +177,7 @@ JSONP (JSON with Padding or JSON-P) is a JavaScript pattern to request data by l
 </pre>
 
 
-- Rapid Prototyping with JS: Agile JavaScript Development - Loi Wu -
+ Rapid Prototyping with JS: Agile JavaScript Development - Loi Wu -
 
 <div class="scale"><img src="img/hugkiss.jpg"  alt="λanguage" /></div>
 
