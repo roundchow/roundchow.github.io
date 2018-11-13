@@ -1,6 +1,6 @@
 ---
-title:  "优化的方法论"
-subtitle: "Optimization"
+title:  "深入理解站点优化"
+subtitle: "Website Optimization"
 author: "wu"
 avatar: "img/authors/tigerCat.jpg"
 image: "img/c.jpg"
