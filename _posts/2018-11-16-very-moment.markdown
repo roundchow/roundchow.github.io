@@ -13,14 +13,11 @@ date:   2018-11-16 03:00:00
 
 平日的夜晚，周末的时光，我都渴望和她共同度过，这种相伴的美好，给我带来的安稳和充实，绝不是一期一会。
 
-<pre>
+这一期是SQL - Structured Query Language
 
-
-</pre>
+<div class="scale"><img src="img/resources/StructuredQueryLanguage.jpg"  alt="SQL" /></div>
 
 > 一期一会(いちごいちえ)  - Loi Wu -
-
-<div class="scale"><img src="img/b.jpg"  alt="いちごいちえ" /></div>
 
 
 
