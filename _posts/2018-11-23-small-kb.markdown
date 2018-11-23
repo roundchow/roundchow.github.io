@@ -4,16 +4,66 @@ subtitle: "一段奇妙旅程的开始 总要有佛系随缘的沉淀"
 author: "wu"
 avatar: "img/authors/tigerCat.jpg"
 image: "img/f.jpg"
-date:   2018-11-23 03:00:00
+date:   2018-11-23 02:00:00
 ---
 
-一段奇妙旅程的开始 总要有佛系随缘的沉淀 | 正如今天 准备得码一码小程序的知识库
+一段奇妙旅程的开始 总要有佛系随缘的沉淀 | 正如今天 开始码一码小程序的知识库
+
+内容都是别人的总结，交过学费以后我码进自己的脑海
 
 ----- ----- ----- -----
 
+## 【1/5】先和微信小程序交朋友
+
+### 什么是微信小程序
+
+如果微信是个小手机，小程序就是各种各样的App
+
+### 微信小程序发展历程
+
+网上的图，描述下微信小程序的几个里程碑：
+
+<div class="scale"><img src="img/resources/wechatsmall/wechatsmallroad.png"  alt="wechatsmallroad.png" /></div>
+
+### 微信小程序入口和限制
+
+网上的图，梳理小程序的入口和限制：
+
+<div class="scale"><img src="img/resources/wechatsmall/wechatsmallroad.png"  alt="wechatsmallentersandlimits.png" /></div>
+
+### 微信小程序和 H5 对比
+
+网上的图，比较小程序和h5：
+
+<div class="scale"><img src="img/resources/wechatsmall/wechatsmallroad.png"  alt="wechatsmallvsh5.png" /></div>
+
+### 进行微信小程序开发
+
+由于小程序是微信提供的一套Hybrid 解决方案，前端开发者可以超快上手。微信小程序提供完善的开发工具链，熟悉客户端的开发者也可以快速上手小程序开发。
+
+- 注册小程序开发账号
+- 下载微信开发者工具
+- 学习开发语言基础知识和小程序框架原理
+- 学习小程序 API 使用
+- 学习小程序调试和上线操作
+
+## 【2/5】小程序架构及其实现机制
+
+todo
+
+## 【3/5】小程序开发知识
+
+todo
+
+## 【4/5】小程序云开发知识
+
+todo
+
+## 【5/5】小程序高级研发知识
+
+todo
 
 
------ ----- ----- -----
 
 <div class="scale"><img src="img/hugkiss.jpg"  alt="λanguage" /></div>
 
