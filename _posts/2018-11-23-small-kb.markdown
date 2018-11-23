@@ -15,29 +15,29 @@ date:   2018-11-23 02:00:00
 
 ## 【1/5】先和微信小程序交朋友
 
-### 什么是微信小程序
+### 1.1 什么是微信小程序
 
 如果微信是个小手机，小程序就是各种各样的App
 
-### 微信小程序发展历程
+### 1.2 微信小程序发展历程
 
 网上的图，描述下微信小程序的几个里程碑：
 
 <div class="scale"><img src="img/resources/wechatsmall/wechatsmallroad.png"  alt="wechatsmallroad" /></div>
 
-### 微信小程序入口和限制
+### 1.3 微信小程序入口和限制
 
 网上的图，梳理小程序的入口和限制：
 
 <div class="scale"><img src="img/resources/wechatsmall/wechatsmallentersandlimits.png"  alt="wechatsmallentersandlimits" /></div>
 
-### 微信小程序和 H5 对比
+### 1.4 微信小程序和 H5 对比
 
 网上的图，比较小程序和h5：
 
 <div class="scale"><img src="img/resources/wechatsmall/wechatsmallvsh5.png"  alt="wechatsmallvsh5" /></div>
 
-### 进行微信小程序开发
+### 1.5 进行微信小程序开发的步骤
 
 由于小程序是微信提供的一套Hybrid 解决方案，前端开发者可以超快上手。微信小程序提供完善的开发工具链，熟悉客户端的开发者也可以快速上手小程序开发。
 
@@ -49,7 +49,44 @@ date:   2018-11-23 02:00:00
 
 ## 【2/5】小程序架构及其实现机制
 
-todo
+### 2.3 小程序 VS HTML5
+
+- 小程序和H5，有人会傻傻分不清楚。小程序偏向于传统CS架构，基于数据驱动的模式，在小程序里一切皆为(视图)组件。
+- 因为不执行在浏览器的宿主环境，浏览器提供的window、document等BOM对象，小程序都没有。所以在小程序内不能使用document.querySelector这类DOM选择器，也不支持XMLHttpRequest、location、localStorage等这些浏览器提供的API。
+- 小程序访问资源使用wx.request不存在跨域的问题，它通过信道服务进行通信和会话管理，所以不支持Cookie存储。
+- 小程序在 JavaScript 的模块化上支持 CommonJS，通过 require 加载。
+- 小程序的页面样式完全继承 CSS 语法，在选择器上会少一些，布局支持 flex 布局。
+- 程序的整体框架采用面向状态编程方式，状态管理从 API 来看采用类似 Redux 的设计方式；单向数据绑定方式，当 View 在 Action 操作后，只能通过 Action 的业务处理来更新 View。
+ 
+页面组件模块上，WXML 提供了一整套的「自定义 UI 组件标签」，有些组件实际是 HTML5 实现的，有些组件为了解决权限、性能和适配等问题实际是 Native 实现的(如 map、input、canvas、video)。
+ 
+### 2.2 小程序的架构
+ 
+网上的图，以下是小程序的架构：
+ 
+<div class="scale"><img src="img/resources/wechatsmall/weixinsmallstructure.png"  alt="weixinsmallstructure" /></div>
+ 
+小程序架构分为视图层和逻辑层，视图层是在 WebView 内渲染，逻辑层则有 JavaScriptCore 来渲染；【关于这一点的证据，之后会新开一篇博客来说明】
+ 
+视图层可以有多个(考虑到整体性能，最多可以 5 个)，逻辑层则全局只有一个(实际通过开启 X5 内核另起一个 JavascriptCore 线程)。
+ 
+### 2.3 小程序生命周期
+ 
+小程序生命周期包括应用的生命周期(逻辑层 App Service)和页面的生命周期(视图层 View)，两者支持的事件不同。下图是官方文档的配图：
+ 
+<div class="scale"><img src="img/resources/wechatsmall/wechatsmalllifecycle.png"  alt="wechatsmalllifecycle" /></div>
+  
+小程序启动时，会同时启动两个线程，一个负责页面渲染的 WebView(实际不止一个)，一个负责逻辑的 JavaScriptCore。逻辑层初始化后会将初始化数据(app.js 中的 global data)通过 JSBridge 传递给渲染层进行渲染，渲染层 WebView 页面渲染完之后又会跟逻辑层通信。
+  
+理解小程序的架构，并弄明白小程序的启动流程后，对照上面的小程序生命周期图就可以较好的理解小程序的整个LifeCycle了。
+  
+### 小程序为什么感觉快
+
+因为小晨旭的视图层做了预加载处理，所以在交互体验上，小程序的页面流畅，点击之后的页面跳转比普通的HTML5快很多。【关于这一点的证据，之后会新开一篇博客来说明】
+
+### 小程序 WXML 是怎么转成 HTML 的
+
+【这部分很有趣，之后会新开一篇博客来说明】
 
 ## 【3/5】小程序开发知识
 
