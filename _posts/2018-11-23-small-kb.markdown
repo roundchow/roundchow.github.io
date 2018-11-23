@@ -1,0 +1,21 @@
+---
+title:  "小程序的知识宝库"
+subtitle: "一段奇妙旅程的开始 总要有佛系随缘的沉淀"
+author: "wu"
+avatar: "img/authors/tigerCat.jpg"
+image: "img/f.jpg"
+date:   2018-11-23 03:00:00
+---
+
+一段奇妙旅程的开始 总要有佛系随缘的沉淀 | 正如今天 准备得码一码小程序的知识库
+
+----- ----- ----- -----
+
+
+
+----- ----- ----- -----
+
+<div class="scale"><img src="img/hugkiss.jpg"  alt="λanguage" /></div>
+
+
+
