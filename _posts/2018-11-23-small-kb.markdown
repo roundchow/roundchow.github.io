@@ -23,19 +23,19 @@ date:   2018-11-23 02:00:00
 
 网上的图，描述下微信小程序的几个里程碑：
 
-<div class="scale"><img src="img/resources/wechatsmall/wechatsmallroad.png"  alt="wechatsmallroad.png" /></div>
+<div class="scale"><img src="img/resources/wechatsmall/wechatsmallroad.png"  alt="wechatsmallroad" /></div>
 
 ### 微信小程序入口和限制
 
 网上的图，梳理小程序的入口和限制：
 
-<div class="scale"><img src="img/resources/wechatsmall/wechatsmallroad.png"  alt="wechatsmallentersandlimits.png" /></div>
+<div class="scale"><img src="img/resources/wechatsmall/wechatsmallentersandlimits.png"  alt="wechatsmallentersandlimits" /></div>
 
 ### 微信小程序和 H5 对比
 
 网上的图，比较小程序和h5：
 
-<div class="scale"><img src="img/resources/wechatsmall/wechatsmallroad.png"  alt="wechatsmallvsh5.png" /></div>
+<div class="scale"><img src="img/resources/wechatsmall/wechatsmallvsh5.png"  alt="wechatsmallvsh5" /></div>
 
 ### 进行微信小程序开发
 
