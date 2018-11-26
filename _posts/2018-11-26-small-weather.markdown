@@ -118,19 +118,16 @@ npm i
 
 为了保护原作者个人的开发者信息，防止敏感信息泄露，clone 下代码后需要按照以下步骤修改为自己的开发者账号：
 
+- 修改腾讯地图的开发者账号：client/lib/api.js 中的 QQ_MAP_KEY，登录 <a target="_blank" href="https://lbs.qq.com/console/user_info.html">腾讯地图开发者控制台</a> 获取
+- 修改和风天气 API 的开发者账号 server/inline/utils 中的 KEY 和 USER_ID，登录<a target="_blank" href="https://console.heweather.com/">和风天气控制台</a>获取
+- 小程序授权信息 server/inline/utils 中的 WECHAT_APPID 和 WECHAT_APP_SECRET，登录小程序管理后台获取
 - 修改小程序云开发的开发环境：client/lib/api.js 中
 
 <pre>
 wx.cloud.init({
-    env: '填写自己的开发者账号中的环境id'
+env: '填写自己的开发者账号中的环境id'
 })
 </pre>
-
-- 修改腾讯地图的开发者账号：client/lib/api.js 中的 QQ_MAP_KEY，登录 <a target="_blank" href="https://lbs.qq.com/console/user_info.html">腾讯地图开发者控制台</a> 获取
-
-- 修改和风天气 API 的开发者账号 server/inline/utils 中的 KEY 和 USER_ID，登录<a target="_blank" href="https://console.heweather.com/">和风天气控制台</a>获取
-
-- 小程序授权信息 server/inline/utils 中的 WECHAT_APPID 和 WECHAT_APP_SECRET，登录小程序管理后台获取
 
 #### 4 - 项目二次开发
 
