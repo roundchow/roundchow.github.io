@@ -35,7 +35,7 @@ date:   2018-11-26 03:00:00
 
 以下是初始化目录结构：
 
-<div class="scale"><img src="img/resources/weichatsmall/wechatsmallmenustructure.png"  alt="wechatsmallmenustructure" /></div>
+<div class="scale"><img src="img/resources/wechatsmall/wechatsmallmenustructure.png"  alt="wechatsmallmenustructure" /></div>
 
 ### 四、Gulp工程化打包方案
 
@@ -95,7 +95,7 @@ gulp.task('wxss', () => {
 
 可以不使用 CSS 的自动添加浏览器兼容前缀的 autoprefixer 插件，而直接用小程序开发者工具的「详情 -> 项目设置 -> 上传代码时样式自动补全」功能。
 
-<div class="scale"><img src="img/resources/weichatsmall/wechatsmallprojectsetting.png"  alt="wechatsmallprojectsetting" /></div>
+<div class="scale"><img src="img/resources/wechatsmall/wechatsmallprojectsetting.png"  alt="wechatsmallprojectsetting" /></div>
 
 #### 3 - js task
 
@@ -222,11 +222,11 @@ gulp.task('build', ['clean'], () => {
 })
 </pre>
 
-### mock server 实现
+### 五、mock server 实现
 
-### 前端对云函数的调用
+### 六、前端对云函数的调用
 
-### 本篇章总结
+### 七、本篇章总结
 
 ----- ----- ----- -----
 
