@@ -1,5 +1,5 @@
 ---
-title:  "小程序的制作旅程 - 准备开始了哦"
+title:  "小程序制作旅程-准备开始了哦"
 subtitle: "一段奇妙的旅程 总要有个主动的开始"
 author: "wu"
 avatar: "img/authors/tigerCat.jpg"
