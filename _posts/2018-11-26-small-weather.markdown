@@ -1,5 +1,5 @@
 ---
-title:  "小程序制作旅程-Part 2-周围天气小程序简介"
+title:  "小程序制作旅程-Part 2-「周围天气」小程序简介"
 subtitle: "一段奇妙的旅程 总要有个主动的开始"
 author: "wu"
 avatar: "img/authors/tigerCat.jpg"
@@ -30,7 +30,7 @@ date:   2018-11-26 03:00:00
 
 #### 1 - 天气预报页面模块和技术栈
 
-<div class="scale"><img src="img/resources/wechatsmalluimodule.png"  alt="wechatsmalluimodule" /></div>
+<div class="scale"><img src="img/resources/wechatsmall/wechatsmalluimodule.png"  alt="wechatsmalluimodule" /></div>
 
 天气预报页面由实时天气预报、24 小时天气预报、一周天气预报和生活指数共四大模块组成，这四大模块各有各的特点：
 
@@ -56,7 +56,7 @@ date:   2018-11-26 03:00:00
 
 #### 2 - 心情签到页面模块和技术栈
 
-<div class="scale"><img src="img/resources/wechatsmallcheckin.png"  alt="wechatsmallcheckin" /></div>
+<div class="scale"><img src="img/resources/wechatsmall/wechatsmallcheckin.png"  alt="wechatsmallcheckin" /></div>
 
 心情签到是一个可以记录自己心情起伏的小工具，它有助于我们找到心情起伏的原因。整个心情签到页面主要包含的内容有：
 
@@ -69,7 +69,7 @@ date:   2018-11-26 03:00:00
 
 整个项目目录结构如下：
 
-<div class="scale"><img src="img/resources/wechatsmallstructureweather.png"  alt="wechatsmallstructureweather" /></div>
+<div class="scale"><img src="img/resources/wechatsmall/wechatsmallstructureweather.png"  alt="wechatsmallstructureweather" /></div>
 
 - server：小程序云开发环境的 mock server 和云函数的 cloud-functions
 - client：小程序前端主要代码；在 client 中会有小程序的配置和工具配置等文件
@@ -118,7 +118,7 @@ npm i
 
 为了保护原作者个人的开发者信息，防止敏感信息泄露，clone 下代码后需要按照以下步骤修改为自己的开发者账号：
 
-1. 修改小程序云开发的开发环境：client/lib/api.js 中
+- 修改小程序云开发的开发环境：client/lib/api.js 中
 
 <pre>
 wx.cloud.init({
@@ -126,11 +126,11 @@ wx.cloud.init({
 })
 </pre>
 
-2. 修改腾讯地图的开发者账号：client/lib/api.js 中的 QQ_MAP_KEY，登录 <a target="_blank" href="https://lbs.qq.com/console/user_info.html">腾讯地图开发者控制台</a> 获取
+- 修改腾讯地图的开发者账号：client/lib/api.js 中的 QQ_MAP_KEY，登录 <a target="_blank" href="https://lbs.qq.com/console/user_info.html">腾讯地图开发者控制台</a> 获取
 
-3. 修改和风天气 API 的开发者账号 server/inline/utils 中的 KEY 和 USER_ID，登录<a target="_blank" href="https://console.heweather.com/">和风天气控制台</a>获取
+- 修改和风天气 API 的开发者账号 server/inline/utils 中的 KEY 和 USER_ID，登录<a target="_blank" href="https://console.heweather.com/">和风天气控制台</a>获取
 
-4. 小程序授权信息 server/inline/utils 中的 WECHAT_APPID 和 WECHAT_APP_SECRET，登录小程序管理后台获取
+- 小程序授权信息 server/inline/utils 中的 WECHAT_APPID 和 WECHAT_APP_SECRET，登录小程序管理后台获取
 
 #### 4 - 项目二次开发
 
