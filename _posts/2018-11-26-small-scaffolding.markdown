@@ -224,13 +224,167 @@ gulp.task('build', ['clean'], () => {
 
 ### 五、mock server 实现
 
+#### 1 - mock server技术方案
+
+小程序云函数的联调测试是相当麻烦，每次修改代码，都需要通过微信开发者工具的编辑器，选择云函数文件夹「上传并部署」。这样的开发效率十分低，所以使用一套云函数本地 mock 的方法，使用 mock server 可以在本地开发的时候直接使用 wx.request 方法调用 mock server 的接口，而真正上线的时候（或者发布测试的时候），则使用 wx.cloud.callFunction 方式调用。
+
+mock server 的职责：
+
+- 本地开发时，将云函数代理到 localserver，免除每次上传云函数测试效果的低效率研发方式
+- 要设计一套方案，将云函数文件单独提取出来，做到 mock server 和上线后代码统一，不做二次开发（修改），降低开发成本
+- 把将来放到服务器管理的静态资源（如图片 icon 类等）暂时放到本地托管，方便本地开发使用
+
+基于上面的职责，小程序项目结构调整如下：
+
+<div class="scale"><img src="img/resources/wechatsmall/wechatsmallmenustructure2.png"  alt="wechatsmallmenustructure2" /></div>
+
+主要变化如下：
+
+- 跟前端相关的文件都放入了 client 中，编译后放到 dist 目录中，微信开发者工具开发目录选择 dist 文件夹
+- 跟 mock server 相关的放入 server 中，server 下文件不做打包处理，即不 release 到 dist 文件下
+- 其中 server/cloud-functions 是云函数文件夹，编译之后放到 dist/cloud-functions 下
+- server/static 文件夹是静态资源文件夹，将来上传到小程序云开发的「文件管理」中维护（小程序云开发 CDN 静态资源服务器）
+
+2 - 使用 Express 来实现 mock server
+
+本项目使用 Express 在本地实现一个 mock server，开启了一个端口号为 3000 的本地服务：
+
+<pre>
+const express = require('express')
+const {PORT} = require('../config.server.json')
+const app = express()
+
+app.listen(PORT, () => {
+    console.log(`开发服务器启动成功：http://127.0.0.1:${PORT}`)
+})
+</pre>
+
+##### 1）实现静态资源服务
+
+使用 express.static 将 server/static 目录设置为静态资源服务器：
+
+<pre>
+// 添加static
+app.use(
+    '/static',
+    express.static(path.join(__dirname, 'static'), {
+        index: false,
+        maxage: '30d'
+    })
+)
+</pre>
+
+静态资源服务器添加好之后，访问 http://127.0.0.1:3000/static/xxx 就可以直接访问 static 文件夹下的静态资源了
+
+##### 2）实现云函数服务
+
+为了满足「云函数文件线上和 mock server 使用一份，不二次开发」的需求，我们直接按照云函数的写法写代码即可，比如 cloud-functions/test/ 模块：
+
+<pre>
+exports.main = async (event) => {
+    let {a, b} = event
+    return new Promise((resolve, reject) => {
+        resolve({result: parseInt(a) + parseInt(b)})
+    })
+}
+</pre>
+
+在 server/index.js 中引入对应的模块，然后分配一个路由即可：
+
+<pre>
+const test = require('./cloud-functions/test/').main
+
+app.get('/api/test', (req, res, next) => {
+    // 将 req.query 传入
+    test(req.query).then(res.json.bind(res)).catch((e) => {
+        console.error(e)
+        next(e)
+    })
+    // next()
+})
+</pre>
+
+上面代码中，将 req.query 传入 test.main，构造一个云函数的 event 参数，用于获取云函数的参数，最后通过 Promise 的 then 传递给 res.json 输出。
+
+写完上面代码，再访问 http://127.0.0.1:3000/api/test?a=1&b=2 就会输出：
+
+<div class="scale"><img src="img/resources/wechatsmall/wechatsmallcloudfunction.png"  alt="wechatsmallcloudfunction" /></div>
+
+##### 3）使用 nodemon 对 server 进行自动重启
+
+在云函数开发中，当文件改动了，需要重启 Node.js 服务，如果每次都手动操作就太消耗时间和精力了，所以引入了<a target="_blank" href="https://github.com/remy/nodemon">nodemon</a> 对 server 目录下文件进行监控，发现文件修改，则重启 Node.js 服务。nodemon 的重启命令放在 package.json 中维护：
+
+<pre>
+// 启动
+"scripts": {
+    "server": "nodemon ./server/index.js"
+},
+// nodemon 配置
+"nodemonConfig": {
+    "ignore": ["test/*", "book/*", "client/*", "bin/*", "node_modules", "dist/*", "package.json"],
+    "delay": "1000"
+},
+</pre>
+
+效果如下图所示：
+
+<div class="scale"><img src="img/resources/wechatsmall/wechatsmallnodemon.png"  alt="wechatsmallnodemon" /></div>
+
 ### 六、前端对云函数的调用
+
+mock server 中的云函数实现了一套代码在本地和线上都可以跑通，但是 client 中页面引用云函数使用 wx.cloud.callFunction 却不能实现一套代码通用，为解决这个问题，笔者通过 jdists 的 remove 和 trigger 方式来实现差异化管理，即
+
+- 将云函数调用等 API 接口请求调用方法，统一放入 client/lib/api.js 中实现，api.js 中使用 wx.cloud.callFunction 方法
+- 将云函数相关的再用 wx.request 方法实现一下，请求本地 127.0.0.1:3000/api/ 接口，代码在 api-mock.js 中实现
+- api.js 和 api-mock.js 输入的参数和输出的结果是一致的，而内部实现是不同的
+- 使用某个云函数时，通过上文提到的 jdists 的 remove 和 trigger 分别引入
+
+继续拿 test 这个云函数做说明，api.js 中直接使用：
+
+<pre>
+export const test = (a, b) => {
+    return wx.cloud.callFunction({
+        name: 'test',
+        data: {
+            a, b
+        }
+    })
+}
+</pre>
+
+然后在 api-mock.js 中实现一次：
+
+<pre>
+// 因为小程序的 callfunction 是 Promisify 的，所以这里需要用 Promise 处理一下
+// 小程序中不支持 Promise，所以引入了 bluebird 这个库
+// 更正以上：由于微信开发者工具和微信真机环境的不断升级，小程序中要使用Promise的话，
+// 已经不必要再引入第三方库如bluebird或es6-promise了，可直接使用。
+import Promise from './bluebird'
+export const test = (a, b) => {
+    return new Promise((resolve, reject) => {
+        wx.request({
+            url: 'http://127.0.0.1:3000/api/test',
+            {a,b},
+            success: (res) => {
+                resolve({result: res.data})
+            },
+            fail: (e) => {
+                reject(e)
+            }
+        })
+    })
+}
+</pre>
 
 ### 七、本篇章总结
 
+本片主要讲解了 Gulp 构建小程序开发脚手架，从 Gulp 的配置说起，介绍了 WXML、Sass、ES6/7 编写小程序前端代码，然后针对云函数开发测试体验不好的问题，介绍了使用 Express 实现本地 mock server 的方式，将云函数和静态资源文件在本地服务器统一管理，实现「一套代码，多处执行」的效果。
+
+如果对本篇的详细代码感兴趣，可以加微信（微信号：superloiwu，加好友请备注：微信小程序伙伴-搭建开发环境），共同探讨。
+
 ----- ----- ----- -----
 
-<div class="scale"><img src="img/hugkiss.jpg"  alt="λanguage" /></div>
+<div class="scale"><img src="img/authors/wechatloi.jpg"  alt="wechatloi" /></div>
 
 
 
