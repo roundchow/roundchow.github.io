@@ -289,6 +289,63 @@ Chrome浏览器安装完 Metamask 之后，浏览器上地址栏右侧会出现�
 
 [iancoleman.io](https://iancoleman.io/bip39/)
 
+### Part5 完成第一笔以太坊交易：给钱包充值 18.75 ETH
+
+现在钱包和账户有了，但是里面却没钱，而以太坊网络中的转账、智能合约函数调用基本都是要花钱的，难道我们测试的时候也要支付白花花的银子？
+
+社区已经提供了很不错的解决办法。免费充值方法（当然是充值到测试网络中）有两个：
+
+一、rinkeby-faucet.com，只要提供账户地址即可充值 0.001 ETH，理论上是可以无限制充值的，但是如果需要充值 1ETH，需要操作 1000 次，太费劲，建议大家直接使用第 2 种方式；
+
+二、faucet.rinkeby.io，可以提供多达 18 ETH 的充值金额，但是为了避免被滥用，要求接受充值的账户持有人必须以太坊账户地址发送到自己的社交网络中（如 Twitter、Facebook、Google Plus），同样，该工具限制了充值的频率；
+
+以下教会大家，如何使用 faucet.rinkeby.io 为 Metamask 里面的账户充值 18 ETH。
+
+1）复制 Metamask 账户的地址，点击小狐狸的图标打开钱包（必要的时候需要输入密码解锁钱包），然后点击 "Account 1" 右边的三个点，在弹出的菜单中选择 "Copy Address to Clipboard"，把地址复制到剪贴板，如下图：
+
+<div class="scale"><img src="img/resources/blockchain/blockchainfaucet1.png"  alt="blockchainfaucet1" /></div>
+
+2）打开 plus.google.com，确保处于登录状态，如下图，按页面右下角的按钮，准备开始发布新的状态：
+
+<div class="scale"><img src="img/resources/blockchain/blockchainfaucet2.png"  alt="blockchainfaucet2" /></div>
+
+3）把复制到的 Metamask 账户地址粘贴到状态发布输入框里面，然后点击发布：
+
+<div class="scale"><img src="img/resources/blockchain/blockchainfaucet3.png"  alt="blockchainfaucet3" /></div>
+
+4）单击新发布状态卡片右上角的分享按钮，会在新标签中打开该状态：
+
+<div class="scale"><img src="img/resources/blockchain/blockchainfaucet4.png"  alt="blockchainfaucet4" /></div>
+
+5）在新标签中复制地址栏中的地址备用：
+
+<div class="scale"><img src="img/resources/blockchain/blockchainfaucet5.png"  alt="blockchainfaucet5" /></div>
+
+6）打开 faucet.rinkeby.io，按下图提示操作：
+
+<div class="scale"><img src="img/resources/blockchain/blockchainfaucet6.png"  alt="blockchainfaucet6" /></div>
+
+7）提交充值申请之后，可能会遇到 Google 的图形验证码，按提示操作即可，等待转账完成，可以看到如下的提示：
+
+<div class="scale"><img src="img/resources/blockchain/blockchainfaucet7.png"  alt="blockchainfaucet7" /></div>
+
+8）重新打开 Metamask 钱包账户，查看账户余额：
+
+<div class="scale"><img src="img/resources/blockchain/blockchainfaucet8.png"  alt="blockchainfaucet8" /></div>
+
+9）刚才明明充值成功了，为什么账户余额还是 0 呢？原因是充值操作只发生在 Rinkeby 测试网络中，而 Metamask 钱包默认链接的是以太坊主网，还记得主网和测试网络的账号可以通用，但是账户中的数据是完全隔离的么？点击 Metamask 钱包界面左上角的 "Main network"，按下图切换到 Rinkeby 测试网络即可：
+
+<div class="scale"><img src="img/resources/blockchain/blockchainfaucet9.png"  alt="blockchainfaucet9" /></div>
+
+10）切换到 Rinkeby 测试网络之后，不出意外，你能看到如下的账户余额，恭喜你，拿到 1W 美金的测试资金：
+<div class="scale"><img src="img/resources/blockchain/blockchainfaucet0.png"  alt="blockchainfaucet0" /></div>
+
+### Part1~Part5 总结
+
+辛辛苦苦的学习了区块链的简明发展史，区块链、以太坊的核心概念和原理后，我们实践了如何用Metamask创建一个以太坊轻HD钱包。最后终于完成了第一笔以太坊交易：给自己的钱包重置18.75 ETH（虽然是充值到测试网络中，换不了钱，但很有成就感啊）。
+
+接下来我们将另开新篇，深入理解以太坊中的交易（Transaction），再重点聊一下智能合约的开发。
+
 ----- ----- ----- -----
 
 <div class="scale"><img src="img/authors/wechatloi.jpg"  alt="wechatloi" /></div>
