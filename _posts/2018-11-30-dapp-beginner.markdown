@@ -346,6 +346,8 @@ Chrome浏览器安装完 Metamask 之后，浏览器上地址栏右侧会出现�
 
 接下来我们将另开新篇，深入理解以太坊中的交易（Transaction），再重点聊一下智能合约的开发。
 
+如果你是理科生，可以继续看下去。如果是文科生的话，可以把本篇再看三遍，毕竟接下来要编写代码了。
+
 ----- ----- ----- -----
 
 <div class="scale"><img src="img/authors/wechatloi.jpg"  alt="wechatloi" /></div>
