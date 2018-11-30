@@ -61,6 +61,8 @@ date:   2018-11-30 03:00:00
 
 区块链 3.0，以各种高性能底层公链为代表，比如 EOS（柚子），是目前整个社区努力的方向，开发生态的成熟还需要时间，能够支持高并发商业应用的运行，类似于为能各种复杂的端应用提供运行环境的现代浏览器（如 Chrome等）；
 
+<div class="scale"><img src="img/resources/blockchain/blockchainroad.png"  alt="blockchainroad" /></div>
+
 参考：
 
 [《比特币 bitcoin》](https://github.com/bitcoin/bitcoin)
