@@ -9,6 +9,8 @@ date:   2018-11-30 03:00:00
 
 区块链入门 - 构建基于以太坊智能合约的 ICO DApp - Beginner
 
+如果对本篇涵盖的产品策划、技术方案、详细代码感兴趣，可以加微信（微信号：superloiwu，加好友请备注：blockchain-beginner），共同探讨。
+
 ----- ----- ----- -----
 
 ## Part1 区块链简明发展史
@@ -203,7 +205,89 @@ date:   2018-11-30 03:00:00
 
 3）code，智能合约的字节码，由智能合约源代码编译而来，存储在区块链上方便任何节点接受智能合约的函数调用；
 
-如果对本篇涵盖的产品策划、技术方案、详细代码感兴趣，可以加微信（微信号：superloiwu，加好友请备注：blockchain-beginner），共同探讨。
+## Part4 使用 Metamask 创建第一个以太坊 HD 钱包
+
+Talk is cheap, show me the code. BUT, 在开始编写代码之前，需要先确保具备调试的基本条件，准备好开发环境。
+
+接触任何区块链网络都需要有自己的账户，管理账户的软件称之为钱包。在创建钱包和账户之前，先了解下以太坊网络中账户的组成：
+
+<div class="scale"><img src="img/resources/blockchain/blockchainethereumaccount.png"  alt="blockchainethereumaccount" /></div>
+
+上图展示的以太坊网络中的账户，由地址、公钥、私钥 3 部分构成，不论使用何种钱包创建的以太坊账户，在不同的以太网网络之间都可以通用。这种跨网络通用的账号机制是内置在以太坊客户端之内的。
+
+在以太坊网络上发起转账交易、部署智能合约、调用智能合约中的函数，都需要有账户，方便以太坊记录和验证，谁、在什么时间、做了什么。
+
+区块链世界里面的钱包借鉴自现实世界的钱包。
+
+现实世界里，每个人都有自己的钱包，钱包里面放了很多张银行卡，一个人在某家银行可能会办多张银行卡。对应到区块链世界里面，可以认为每张银行卡对应一个账户。每家银行对应一个区块链网络，能管理所有银行卡的软件就叫做钱包，对应关系如下图：
+
+<div class="scale"><img src="img/resources/blockchain/blockchainwallet.png"  alt="blockchainwallet" /></div>
+
+### 钱包运行环境
+
+钱包 Metamask 就是个浏览器插件，虽然 Metamask 能运行在多个浏览器里面，但考虑到 Solidity 调试工具运行环境、前端调试工具的丰富程度、浏览器性能、市场份额占比等要素，建议安装 Google Chrome 的较新版：
+
+<div class="scale"><img src="img/resources/blockchain/blockchainchrome.png"  alt="blockchainchrome" /></div>
+
+### 创建钱包和账户
+
+创建以太坊账户的方式有很多种，要开发跑在浏览器中的 DApp，如果钱包集成在浏览器中就非常方便了，Metamask 提供了非常便捷的以太坊浏览器钱包插件，可以再 Google Chrome WebStore 中下载该插件。
+
+安装浏览器插件的时候要认准 Metamask 如下的 Logo：
+
+<div class="scale"><img src="img/resources/blockchain/blockchainmetamask.png"  alt="blockchainmetamask" /></div>
+
+Chrome浏览器安装完 Metamask 之后，浏览器上地址栏右侧会出现如下图红框中的图标：
+
+<div class="scale"><img src="img/resources/blockchain/blockchainmetamaskinstalled.png"  alt="blockchainmetamaskinstalled" /></div>
+
+单击狐狸图标，会弹出如下图的安全提示信息，大意为：创建钱包账户之后，账户地址是公开的，第三方可以查看其中的余额以及交易历史等信息。
+
+<div class="scale"><img src="img/resources/blockchain/blockchainmetamask1.png"  alt="blockchainmetamask1" /></div>
+
+点击 "ACCEPT"，进入如下的使用条款页面：
+
+<div class="scale"><img src="img/resources/blockchain/blockchainmetamask2.png"  alt="blockchainmetamask2" /></div>
+
+使用条款页面的 "ACCEPT" 按钮开始是灰色的，必须滚动条款到底部，才会变成可点击的，如下图：
+
+<div class="scale"><img src="img/resources/blockchain/blockchainmetamask3.png"  alt="blockchainmetamask3" /></div>
+
+继续点击 "ACCEPT"，进入钱包密码填写页面，至少填写 8 个字符：
+
+<div class="scale"><img src="img/resources/blockchain/blockchainmetamask4.png"  alt="blockchainmetamask4" /></div>
+
+密码填写完之后，点击 "CREATE"，创建账户，接下来弹出钱包的助记词界面：
+
+<div class="scale"><img src="img/resources/blockchain/blockchainmetamask5.png"  alt="blockchainmetamask5" /></div>
+
+这里的助记词是用来生成账户的公钥和私钥的，也是用来恢复钱包里面的所有账户的。
+
+如果创建的是存放真实资产的账户，千万不要把助记词泄露给别人！千万不要把助记词泄露给别人！千万不要把助记词泄露给别人！因为无论谁掌握了你钱包的助记词，就相当于掌握了你钱包里所有账户的私钥，钱包里面的资产就不再属于你自己了，别人可以随时转走。
+
+从密码学角度看，地址、公钥、私钥本质都是非常非常大的数字。无论转成 16 进制或者 base58 格式，对普通用户来说，都是杂乱无章的随机字符串。比特币社区提出了 BIP39 的提议，帮助区块链用户记住这些数字，技术上该提议可以在任意区块链中实现。
+
+比如使用完全相同的助记词在比特币和区块链上生成的地址可以是不同的，用户只需要记住满足一定规则的词组（即“助记词”），钱包软件就可以基于该词组创建一系列的账户，并且保障不论是在什么硬件、什么时间创建出来的账户、公钥、私钥都完全相同，这样既解决了账号识记的问题，也把账户恢复的门槛降低了很多。支持 BIP39 提议的钱包也可以归类为 HD 钱包（Hierarchical Deterministic Wallet），Metamask 属于此类。
+
+为了方便后续使用，这里需要点击下面的红色按钮 "DOWNLOAD SEED WORDS AS FILE"，把助记词保存为本地文件，然后单击 "I'VE COPIED IT SOMEWHERE ELSE"，表示已经把助记词保存到了其他地方。
+
+钱包和账户初步配置成功，里面的余额为 0 ，如下图：
+
+<div class="scale"><img src="img/resources/blockchain/blockchainmetamask6.png"  alt="blockchainmetamask6" /></div>
+
+为了验证助记词泄露的后果，可以把助记词复制出来，放到 [iancoleman.io](https://iancoleman.io/bip39/) 上去，看看能不能得到对应的以太坊账号私钥和公钥，答案是：能，并且能得到该助记词在任何区块链网络上的账户信息。
+
+另外可以尝试钱包软件：[imtoken](https://token.im/) 和 [bitpie](https://bitpie.com/)
+
+参考：
+
+[以太坊轻钱包 Metamask](https://metamask.io/)
+
+[Google Chrome WebStore 的 Metamask 插件](https://chrome.google.com/webstore/detail/metamask/nkbihfbeogaeaoehlefnkodbefgpgknn?hl=en)
+
+[ BIP39 提议](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki)
+
+[iancoleman.io](https://iancoleman.io/bip39/)
 
 ----- ----- ----- -----
 
