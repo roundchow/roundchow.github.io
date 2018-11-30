@@ -13,7 +13,7 @@ date:   2018-11-30 03:00:00
 
 ## Part1 区块链简明发展史
 
-区块链简明发展史：BTC大饼？Ethereum姨太？EOS柚子？
+区块链简明发展史：什么是BTC大饼？Ethereum姨太？EOS柚子？
 
 ### 比特币
 
@@ -21,11 +21,11 @@ date:   2018-11-30 03:00:00
 
 参考：
 
-《比特币白皮书》https://bitcoin.org/bitcoin.pdf
+[《比特币白皮书》](https://bitcoin.org/bitcoin.pdf)
 
-《区块链钱包用户数》https://www.blockchain.com/charts/my-wallet-n-users
+[《区块链钱包用户数》](https://www.blockchain.com/charts/my-wallet-n-users)
 
-《区块链模型》https://mp.weixin.qq.com/s/ifbakeqsqf7mI8pdwleSzA
+[《区块链模型》](https://mp.weixin.qq.com/s/ifbakeqsqf7mI8pdwleSzA)
 
 ### 以太坊
 
@@ -41,33 +41,33 @@ date:   2018-11-30 03:00:00
 
 参考：
 
-《以太坊白皮书》https://github.com/ethereum/wiki/wiki/White-Paper
+[《以太坊白皮书》](https://github.com/ethereum/wiki/wiki/White-Paper)
 
-《以太猫》https://www.cryptokitties.co/
+[《以太猫》](https://www.cryptokitties.co/)
 
-《State of DApps》https://www.stateofthedapps.com/
+[《State of DApps》](https://www.stateofthedapps.com/)
 
-《以太坊用户数》https://etherscan.io/chart/address
+[《以太坊用户数》](https://etherscan.io/chart/address)
 
-《DAICO》https://ethresear.ch/t/explanation-of-daicos/465
+[《DAICO》](https://ethresear.ch/t/explanation-of-daicos/465)
 
 ### 区块链
 
 区块链技术的发展分为 3 个阶段：
 
-- 区块链 1.0，以比特币为代表（大饼），仅支持转账，类似于刚刚诞生的万维网，网页只支持静态内容展示、链接等；
+区块链 1.0，以比特币为代表（大饼），仅支持转账，类似于刚刚诞生的万维网，网页只支持静态内容展示、链接等；
 
-- 区块链 2.0，以以太坊为代表（姨太），能够在转账基础上支持一定复杂度的业务逻辑定制（智能合约），类似于有了 JS 的万维网，即在静态展示的基础上自定义动态内容，但是浏览器的 JS 执行效率还比较弱，不能在浏览器做非常复杂的事情；
+区块链 2.0，以以太坊为代表（姨太），能够在转账基础上支持一定复杂度的业务逻辑定制（智能合约），类似于有了 JS 的万维网，即在静态展示的基础上自定义动态内容，但是浏览器的 JS 执行效率还比较弱，不能在浏览器做非常复杂的事情；
 
-- 区块链 3.0，以各种高性能底层公链为代表，比如 EOS（柚子），是目前整个社区努力的方向，开发生态的成熟还需要时间，能够支持高并发商业应用的运行，类似于为能各种复杂的端应用提供运行环境的现代浏览器（如 Chrome等）；
+区块链 3.0，以各种高性能底层公链为代表，比如 EOS（柚子），是目前整个社区努力的方向，开发生态的成熟还需要时间，能够支持高并发商业应用的运行，类似于为能各种复杂的端应用提供运行环境的现代浏览器（如 Chrome等）；
 
 参考：
 
-《比特币 bitcoin》https://github.com/bitcoin/bitcoin
+[《比特币 bitcoin》](https://github.com/bitcoin/bitcoin)
 
-《以太坊》https://www.ethereum.org/
+[《以太坊》](https://www.ethereum.org/)
 
-《EOS》https://eos.io/
+[《EOS》](https://eos.io/)
 
 
 如果对本篇涵盖的产品策划、技术方案、详细代码感兴趣，可以加微信（微信号：superloiwu，加好友请备注：blockchain-beginner），共同探讨。
