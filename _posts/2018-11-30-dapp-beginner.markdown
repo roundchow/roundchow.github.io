@@ -1,9 +1,9 @@
 ---
-title:  "区块链入门"
-subtitle: "构建基于以太坊智能合约的 ICO DApp"
+title:  "【区块链】区块链和以太坊"
+subtitle: "构建基于以太坊智能合约的 ICO DApp 的前传"
 author: "wu"
 avatar: "img/authors/tigerCat.jpg"
-image: "img/c.jpg"
+image: "img/timg02.jpg"
 date:   2018-11-30 03:00:00
 ---
 

@@ -1,9 +1,9 @@
 ---
-title:  "小程序制作旅程-准备开始了哦"
+title:  "【小程序】做个小程序 - 准备开始了鸭"
 subtitle: "一段舒心的旅程 总会有踏实的沉淀"
 author: "wu"
 avatar: "img/authors/tigerCat.jpg"
-image: "img/f.jpg"
+image: "img/timg04.jpg"
 date:   2018-11-23 03:00:00
 ---
 

@@ -1,9 +1,9 @@
 ---
-title:  "小程序的知识宝库"
+title:  "【小程序】小程序不小"
 subtitle: "一段舒心的旅程 总会有踏实的沉淀"
 author: "wu"
 avatar: "img/authors/tigerCat.jpg"
-image: "img/f.jpg"
+image: "img/timg04.jpg"
 date:   2018-11-23 02:00:00
 ---
 

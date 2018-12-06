@@ -3,7 +3,7 @@ title:  "小程序制作旅程-Part 1-搭建开发环境"
 subtitle: "一段舒心的旅程 总会有踏实的沉淀"
 author: "wu"
 avatar: "img/authors/tigerCat.jpg"
-image: "img/f.jpg"
+image: "img/timg04.jpg"
 date:   2018-11-25 03:00:00
 ---
 

@@ -1,5 +1,5 @@
 ---
-title:  "Effective JavaScript"
+title:  "【语言】Effective JavaScript"
 subtitle: "提升功力的心法秘籍"
 author: "wu"
 avatar: "img/authors/tigerCat.jpg"
