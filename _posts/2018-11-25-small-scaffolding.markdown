@@ -1,5 +1,5 @@
 ---
-title:  "小程序制作旅程-Part 1-搭建开发环境"
+title:  "【小程序】做个小程序 - 搭建开发环境"
 subtitle: "一段舒心的旅程 总会有踏实的沉淀"
 author: "wu"
 avatar: "img/authors/tigerCat.jpg"
