@@ -278,7 +278,7 @@ if __name__ == '__main__':
 
 使用 Requests，配合 Chrome 浏览器可以实现了一个简单爬虫，但因为微信公众号的封闭性，微信公众平台并没有对外提供 Web 端入口，只能通过手机客户端接收、查看公众号文章，所以，为了窥探到公众号背后的网络请求，我们需要借助代理工具的辅助。
 
-<div class="scale"><img src="img/resources/crawler/proxy.png"  alt="proxy" /></div>
+<div class="scale"><img src="img/resources/crawler/httpproxy.png"  alt="httpproxy" /></div>
 
 HTTP代理工具又称为抓包工具，主流的抓包工具 Windows 平台有 Fiddler，macOS 有 Charles，阿里开源了一款工具叫 AnyProxy。它们的基本原理都是类似的，就是通过在手机客户端设置好代理IP和端口，客户端所有的 HTTP、HTTPS 请求就会经过代理工具，在代理工具中就可以清晰地看到每个请求的细节，然后可以分析出每个请求是如何构造的，弄清楚这些之后，我们就可以用 Python 模拟发起请求，进而得到我们想要的数据。
 
