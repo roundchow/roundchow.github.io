@@ -240,7 +240,6 @@ r = requests.get('http://www.kuaidaili.com/free/', proxies=proxies, timeout=2)
 
 import requests
 
-
 class SimpleCrawler:
 
     def crawl(self, params=None):
@@ -266,7 +265,6 @@ class SimpleCrawler:
         for follower in response.json().get("data"):
             print(follower)
 
-
 if __name__ == '__main__':
     SimpleCrawler().crawl()
 
@@ -274,7 +272,33 @@ if __name__ == '__main__':
 
 ### 3-小结
 
-这就是一个最简单的基于 Requests 的单线程知乎专栏粉丝列表的爬虫，requests 非常灵活，请求头、请求参数、Cookie 信息都可以直接指定在请求方法中，返回值 response 如果是 json 格式可以直接调用json()方法返回 python 对象。关于 Requests 的更多使用方法可以参考官方文档：docs.python-requests.org/en/master/
+这就是一个最简单的基于 Requests 的单线程知乎专栏粉丝列表的爬虫，requests 非常灵活，请求头、请求参数、Cookie 信息都可以直接指定在请求方法中，返回值 response 如果是 json 格式可以直接调用json()方法返回 python 对象。关于 Requests 的更多使用方法可以参考官方文档：http://docs.python-requests.org/en/master/
+
+## 第三篇-抓包分析公众号请求过程
+
+使用 Requests，配合 Chrome 浏览器可以实现了一个简单爬虫，但因为微信公众号的封闭性，微信公众平台并没有对外提供 Web 端入口，只能通过手机客户端接收、查看公众号文章，所以，为了窥探到公众号背后的网络请求，我们需要借助代理工具的辅助。
+
+<div class="scale"><img src="img/resources/crawler/proxy.png"  alt="proxy" /></div>
+
+HTTP代理工具又称为抓包工具，主流的抓包工具 Windows 平台有 Fiddler，macOS 有 Charles，阿里开源了一款工具叫 AnyProxy。它们的基本原理都是类似的，就是通过在手机客户端设置好代理IP和端口，客户端所有的 HTTP、HTTPS 请求就会经过代理工具，在代理工具中就可以清晰地看到每个请求的细节，然后可以分析出每个请求是如何构造的，弄清楚这些之后，我们就可以用 Python 模拟发起请求，进而得到我们想要的数据。
+
+配置好抓包工具的几个步骤主要包括指定监控的端口，开通HTTPS流量解密功能，同时，客户端需要安装CA证书。
+
+在用 Python 代码来模拟微信请求之前，先明确抓取数据的具体内容：
+
+<pre>
+
+1、服务器的响应结果，200 表示服务器对该请求响应成功
+2、请求协议，微信的请求协议都是基 于HTTPS 的，所以前面一定要配置好，不然你看不到 HTTPS 的请求。
+3、微信服务器主机名
+4、请求路径
+5、请求行，包括了请求方法（GET），请求协议（HTTP/1.1），请求路径（/mp/profile_ext...后面还有很长一串参数） 
+6、包括Cookie信息在内的请求头。
+7、微信服务器返回的响应数据，我们分别切换成 TextView 和 WebView 看一下返回的数据是什么样的
+
+<pre>
+
+通过抓包分析公众号请求过程，接着就可以基于Requests模拟像微信服务器发起请求。
 
 
 <div class="scale"><img src="img/authors/wechatloi.jpg"  alt="wechatloi" /></div>
