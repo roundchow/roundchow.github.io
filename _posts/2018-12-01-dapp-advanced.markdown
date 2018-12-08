@@ -15,8 +15,6 @@ date:   2018-12-01 03:00:00
 
 ## Part1 自建智能合约工作流的动机和目标
 
-
-
 ### 1-Remix 的局限性
 
 Remix 在智能合约的开发、编译、部署、测试上给我们提供了便利，如果想快速测试想法、编写智能合约原型，用 Remix 效率自然很高，但纯粹使用 Remix 做智能合约开发有明显的局限：
@@ -183,6 +181,158 @@ mkdir tests
 </pre>
 
 好，准备好了地基，接下来我们会在地基上开始建房子。
+
+## Part2 编写只能合约的编译脚本
+
+智能合约的编译，是对合约进行部署和测试的前置步骤，编译步骤的目标是把源代码转成 ABI 和 Bytecode，并且能够处理编译时抛出的错误，确保不会在包含错误的源代码上进行编译。
+
+### 1-准备合约源码
+
+将 Remix 上编写的智能合约代码放到 contracts 目录下的 Car.sol 文件中，文件内容如下：
+
+<pre>
+
+pragma solidity ^0.4.17;
+
+contract Car {
+  string public brand;
+
+  constructor(string initialBrand) public {
+    brand = initialBrand;
+  }
+
+  function setBrand(string newBrand) public {
+    brand = newBrand;
+  }
+}
+
+</pre>
+
+### 2-准备编译工具
+
+我们需要使用 solc 作为基础工具，然后配合简单的 Node.js 文件系统操作，把编译结果输出到文件系统中，方便后续使用。
+
+先使用 yarn 把 solc 安装到项目的命令如下：
+
+<pre>
+
+yarn add solc@0.4.24
+
+</pre>
+
+参考：
+
+[《solc》](https://www.npmjs.com/package/solc)
+
+### 3-开发编译脚本
+
+在 scripts 目录下新建文件 compile.js，内容如下：
+
+<div class="scale"><img src="img/resources/blockchain/smartcontractcompile1.png"  alt="smartcontractcompile1" /></div>
+
+这段代码目前直白到不用解释：我们把合约源代码读出来，然后传给 solc 编译器，等待编译完成之后，把编译结果输出到控制台。
+
+### 4-编译结果浅析
+
+使用 node scripts/compile.js 运行编辑脚本，得到如下结果(部分截图)：
+
+<div class="scale"><img src="img/resources/blockchain/smartcontractcompile.png"  alt="smartcontractcompile" /></div>
+
+从控制台输出可以看到编译结果是个嵌套的对象，其中的 contracts 属性包含了所有找到的合约，而我们的源代码中只有 Car 合约，每个合约下面都包含了 assembly、bytecode、interface、metadata、opcodes 等字段，我们目前阶段需要关心的字段有：
+
+1、bytecode，即前文提到过，部署合约到以太坊测试网络时需要使用；
+2、interface，即前文说过的 ABI，使用 web3 初始化智能合约交互实例的时候需要使用；
+
+<pre>
+
+[{
+	"constant": true,
+	"inputs": [],
+	"name": "brand",
+	"outputs": [{
+		"name": "",
+		"type": "string"
+	}],
+	"payable": false,
+	"stateMutability": "view",
+	"type": "function"
+}, {
+	"constant": false,
+	"inputs": [{
+		"name": "newBrand",
+		"type": "string"
+	}],
+	"name": "setBrand",
+	"outputs": [],
+	"payable": false,
+	"stateMutability": "nonpayable",
+	"type": "function"
+}, {
+	"inputs": [{
+		"name": "initialBrand",
+		"type": "string"
+	}],
+	"payable": false,
+	"stateMutability": "nonpayable",
+	"type": "constructor"
+}]
+
+</pre>
+
+可以看到 interface 是内含 3 个元素的大数组：
+
+1、每个元素要么是合约构造函数，要么是可以调用的合约接口；
+2、每个元素里面有注明函数的类型、接收的参数类型、返回值的类型；
+
+### 5-保存编译结果
+
+为了方便后续的部署和测试过程直接使用编译结果，需要把编译结果保存到文件系统中，在做改动之前，我们引入一个非常好用的小工具 fs-extra，在脚本中使用 fs-extra 直接替换到 fs，然后对代码做如下改动（记得 yarn add fs-extra）：
+
+<div class="scale"><img src="img/resources/blockchain/smartcontractcompile2.png"  alt="smartcontractcompile2" /></div>
+
+然后重新运行编译脚本，确保 complied 目录下包含了新生成的 Car.json。
+
+类似于前端构建流程中的编译步骤，编译前通常需要把之前的结果清空，然后把最新的编译结果保存下来，这对保障一致性非常重要。对编译脚本做如下改动：
+
+<div class="scale"><img src="img/resources/blockchain/smartcontractcompile3.png"  alt="smartcontractcompile3" /></div>
+
+新增的 cleanup 代码段的作用就是准备全新的目录，修改完之后，需要重新运行编译脚本，确保一切正常。
+
+### 6-处理编译错误
+
+编译脚本当前只处理了最常见的情况，即 Solidity 源代码没问题，这个假设其实是不成立的，如果源代码有问题，我们在编译阶段就应该报出来，而不应该把错误的结果写入到文件系统，因为这样会导致后续步骤失败。
+
+为了搞清楚编译器 solc 遇到错误时的行为，我们人为在源代码中引入错误（把 function 关键字写成 functio）
+
+<div class="scale"><img src="img/resources/blockchain/smartcontractcompile4.png"  alt="smartcontractcompile4" /></div>
+
+重新运行编译脚本，发现它并没有报错，而是输出如下内容，其中错误的可读性比较差：
+
+<pre>
+
+{ contracts: {},
+  errors:
+   [ ':10:21: ParserError: Expected \';\' but got \'(\'\n    functio setBrand(string newBrand) public {\n                    ^\n' ],
+  sourceList: [ '' ],
+  sources: {} }
+
+</pre>
+
+鉴于此，我们对编译脚本稍作改动，能够在出错时直接抛出错误：
+
+<div class="scale"><img src="img/resources/blockchain/smartcontractcompile5.png"  alt="smartcontractcompile5" /></div>
+
+重新运行编译脚本，如下图，我们能看到可读性更好的错误消息：
+
+<div class="scale"><img src="img/resources/blockchain/smartcontractcompileresult.png"  alt="smartcontractcompileresult" /></div>
+
+### 7-最终的编译脚本
+
+编译脚本的最终版本如下：
+
+<div class="scale"><img src="img/resources/blockchain/smartcontractcompile6.png"  alt="smartcontractcompile6" /></div>
+
+智能合约的编译结果已经就绪，接下来我们能使用 web3.js编写智能合约部署脚本。
 
 <div class="scale"><img src="img/authors/wechatloi.jpg"  alt="wechatloi" /></div>
 
