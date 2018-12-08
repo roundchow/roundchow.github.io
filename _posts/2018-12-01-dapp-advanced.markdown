@@ -288,13 +288,13 @@ yarn add solc@0.4.24
 
 为了方便后续的部署和测试过程直接使用编译结果，需要把编译结果保存到文件系统中，在做改动之前，我们引入一个非常好用的小工具 fs-extra，在脚本中使用 fs-extra 直接替换到 fs，然后对代码做如下改动（记得 yarn add fs-extra）：
 
-<div class="scale"><img src="img/resources/blockchain/smartcontractcompile2.png"  alt="smartcontractcompile2" /></div>
+<div class="scale"><img src="img/resources/blockchain/smartcontractcompileversion2.png"  alt="smartcontractcompileversion2" /></div>
 
 然后重新运行编译脚本，确保 complied 目录下包含了新生成的 Car.json。
 
 类似于前端构建流程中的编译步骤，编译前通常需要把之前的结果清空，然后把最新的编译结果保存下来，这对保障一致性非常重要。对编译脚本做如下改动：
 
-<div class="scale"><img src="img/resources/blockchain/smartcontractcompile3.png"  alt="smartcontractcompile3" /></div>
+<div class="scale"><img src="img/resources/blockchain/smartcontractcompileversion3.png"  alt="smartcontractcompileversion3" /></div>
 
 新增的 cleanup 代码段的作用就是准备全新的目录，修改完之后，需要重新运行编译脚本，确保一切正常。
 
@@ -304,7 +304,7 @@ yarn add solc@0.4.24
 
 为了搞清楚编译器 solc 遇到错误时的行为，我们人为在源代码中引入错误（把 function 关键字写成 functio）
 
-<div class="scale"><img src="img/resources/blockchain/smartcontractcompile4.png"  alt="smartcontractcompile4" /></div>
+<div class="scale"><img src="img/resources/blockchain/smartcontractcompileversion4.png"  alt="smartcontractcompileversion4" /></div>
 
 重新运行编译脚本，发现它并没有报错，而是输出如下内容，其中错误的可读性比较差：
 
@@ -320,7 +320,7 @@ yarn add solc@0.4.24
 
 鉴于此，我们对编译脚本稍作改动，能够在出错时直接抛出错误：
 
-<div class="scale"><img src="img/resources/blockchain/smartcontractcompile5.png"  alt="smartcontractcompile5" /></div>
+<div class="scale"><img src="img/resources/blockchain/smartcontractcompileversion5.png"  alt="smartcontractcompileversion5" /></div>
 
 重新运行编译脚本，如下图，我们能看到可读性更好的错误消息：
 
@@ -330,7 +330,7 @@ yarn add solc@0.4.24
 
 编译脚本的最终版本如下：
 
-<div class="scale"><img src="img/resources/blockchain/smartcontractcompile6.png"  alt="smartcontractcompile6" /></div>
+<div class="scale"><img src="img/resources/blockchain/smartcontractcompileversion6.png"  alt="smartcontractcompileversion6" /></div>
 
 智能合约的编译结果已经就绪，接下来我们能使用 web3.js编写智能合约部署脚本。
 
