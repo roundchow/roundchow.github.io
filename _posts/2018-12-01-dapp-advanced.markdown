@@ -182,7 +182,7 @@ mkdir tests
 
 好，准备好了地基，接下来我们会在地基上开始建房子。
 
-## Part2 编写只能合约的编译脚本
+## Part2 编写智能合约的编译脚本
 
 智能合约的编译，是对合约进行部署和测试的前置步骤，编译步骤的目标是把源代码转成 ABI 和 Bytecode，并且能够处理编译时抛出的错误，确保不会在包含错误的源代码上进行编译。
 
@@ -228,7 +228,7 @@ yarn add solc@0.4.24
 
 在 scripts 目录下新建文件 compile.js，内容如下：
 
-<div class="scale"><img src="img/resources/blockchain/smartcontractcompile1.png"  alt="smartcontractcompile1" /></div>
+<div class="scale"><img src="img/resources/blockchain/smartcontractcompileversion1.png"  alt="smartcontractcompileversion1" /></div>
 
 这段代码目前直白到不用解释：我们把合约源代码读出来，然后传给 solc 编译器，等待编译完成之后，把编译结果输出到控制台。
 
