@@ -336,13 +336,51 @@ yarn add solc@0.4.24
 
 ## Part3-编写智能合约部署脚本
 
+我们已经从 Solidity 源代码拿到 bytecode，接下来我们想办法把它部署到以太坊测试网络 Rinkeby 上去。
+
 ### 1-web3.js简介
+
+web3.js 是把前端世界和区块链世界连接起来的桥梁，官方文档 web3js.readthedocs.io 中对自己的定义是：
+
+<pre>
+
+The web3.js library is a collection of modules which contain specific functionality for the ethereum ecosystem.
+
+</pre>
+
+web3.js 里面包含了多个以太坊生态中不同功能的模块。具体来说包含：
+
+1、web3-eth，方便 Javascript 和以太坊区块链通信，部署、调用智能合约；
+
+2、web3-utils，为 DApp 开发者提供了大量的工具函数，比如单位换算等，DApp 开发时会使用里面的函数；
+
+3、web3-shh，方便做基于 whisper 协议的 P2P 通信和广播；
+
+4、web3-bzz，方便做基于 swarm 协议的去中心化文件存储；
+
+web3.js 是怎么在前端代码和以太坊之间搭建桥梁的呢？
+
+以太坊的主网、测试网络、本地私有网络其实非常多，以太坊的钱包应用也非常多，web3.js 没有选择兼容所有的情况，而是自己制定了一个接口规范，让社区开发者为之贡献插件，插件在 web3.js 的体系里面叫做 provider，可以理解为 webpack 生态体系下面的各种 plugin。
+
+web3.js 通过插件机制和以太坊不同网络通信的模式可以用下面的图示：
+
+<div class="scale"><img src="img/resources/blockchain/blockchaindeploy01.png"  alt="blockchaindeploy01" /></div>
+
+参考：
+
+[《web3js.readthedocs.io》](https://web3js.readthedocs.io/en/1.0/getting-started.html)
 
 ### 2-部署的必要条件
 
+客户端和以太坊网络的任何交互都可以定性为接口调用或交易，智能合约部署属于后者，部署时除了必须有 bytecode，发起交易的必要条件也应算在内，具体来说包含如下几个方面：
+
 #### 1）余额大于 0 的账户
 
+因为以太坊上的任何交易都需要账户发起，账户中必须有足够的余额来支付手续费（Transaction Fee），我们之前创建并充值的 Metamask 账户马上就能派上用场了，如果余额为 0 部署会失败。
+
 #### 2）与目标网络的通信
+
+区块链上的任何交易都会被发送到某个网络上，并被这个网络中的节点打包确认，我们的可以考虑把智能合约部署到 Rinkeby 测试网络上，但是怎么跟这个网络通信呢？惯常做法是自己跑个节点，然后让节点加入到 Rinkeby 测试网络中，这样我们的交易通过自己运行的节点广播给 Rinkeby 测试网络中的其他节点，就能被打包确认，但实际上前端同学自己跑节点成本还是很高的，好在社区有人做了各种以太坊网络的入口节点，并为广大开发者提供了接口可以直接调用。Infura 就提供了这样的服务，官网介绍是：
 
 ### 3-安装依赖
 
